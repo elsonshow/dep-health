@@ -1,4 +1,4 @@
-﻿/* DepHealth UI + data collection.
+/* DepHealth UI + data collection.
  * All network calls go to public, CORS-enabled APIs. No backend, no cookies,
  * no third-party analytics. Nothing you paste leaves the browser. */
 (function () {
@@ -21,7 +21,9 @@
     summary: document.getElementById('summary'),
     rows: document.getElementById('rows'),
     copyMd: document.getElementById('btn-copy-md'),
-    copyJson: document.getElementById('btn-copy-json')
+    copyJson: document.getElementById('btn-copy-json'),
+    share: document.getElementById('btn-share'),
+    shareNote: document.getElementById('share-note')
   };
 
   var state = { verdicts: [], summary: null, meta: null };
@@ -237,6 +239,38 @@
   el.manifest.addEventListener('keydown', function (e) {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') run();
   });
+
+  // 分享链接：把结论表压进 URL fragment，不经过任何服务器
+  el.share.addEventListener('click', function () {
+    if (!state.summary) return;
+    var code = Eng.encodeShare(state.summary, state.verdicts, state.meta);
+    var url = location.origin + location.pathname + '#r=' + code;
+    if (url.length > 7000) {
+      copy(url, el.share); // 仍然可用，只是提醒一下
+      el.shareNote.hidden = false;
+      el.shareNote.textContent = '链接较长（' + url.length + ' 字符），部分聊天工具可能截断；依赖数少时更可靠。';
+      return;
+    }
+    copy(url, el.share);
+  });
+
+  // 打开分享链接：本地解码并渲染快照，不请求任何接口
+  if (location.hash.indexOf('#r=') === 0) {
+    var shared = Eng.decodeShare(location.hash.slice(3));
+    if (shared) {
+      state = { verdicts: shared.verdicts, summary: shared.summary, meta: shared.meta };
+      renderSummary(shared.summary);
+      renderRows(shared.verdicts);
+      el.shareNote.hidden = false;
+      el.shareNote.textContent =
+        '这是一份分享的报告快照' +
+        (shared.meta.project ? '（' + shared.meta.project + '）' : '') +
+        (shared.meta.sharedAt ? '，生成于 ' + shared.meta.sharedAt.replace('T', ' ') + ' UTC' : '') +
+        '。它只包含结论表，不含逐条证据；要检查你自己的项目，把 package.json 粘到上面重新运行。';
+      el.results.hidden = false;
+      el.progress.hidden = true;
+    }
+  }
 
   // Shareable demo link: ?autorun=1 runs the built-in sample immediately.
   if (/[?&]autorun=1/.test(location.search) && window.DepSamples && window.DepSamples.length) {

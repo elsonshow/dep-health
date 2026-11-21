@@ -132,6 +132,125 @@
 
   var COPYLEFT = /(^|[^a-z])(A?GPL|LGPL|MPL|EUPL|CDDL|OSL|CC-BY-SA)/i;
 
+  /* ------------------------------------------------------- shareable link */
+  /*
+   * A shared report has to survive being pasted into WeChat / Slack / a PR
+   * comment, so it carries only the verdict table (no long finding texts) and
+   * is packed into the URL fragment. Nothing is uploaded anywhere.
+   * Format v1: {v:1,p:project,t:iso,s:{a:avg,t:total,c:critical},d:[[name,range,latest,score,status,tag]]}
+   */
+
+  var SHARE_VERSION = 1;
+
+  function compactTag(v) {
+    var f = v.findings && v.findings[0];
+    if (!f) return '';
+    return String(f.text).replace(/\s+/g, ' ').slice(0, 80);
+  }
+
+  function encodeShare(summary, verdicts, meta) {
+    var payload = {
+      v: SHARE_VERSION,
+      p: (meta && meta.project) || '',
+      t: new Date().toISOString().slice(0, 16),
+      s: { a: summary.average, t: summary.total, c: summary.criticalCount },
+      d: verdicts.map(function (v) {
+        return [
+          v.name,
+          v.range,
+          (v.data && v.data.latest) || '',
+          v.score === null ? -1 : v.score,
+          v.status,
+          compactTag(v)
+        ];
+      })
+    };
+    return toBase64Url(JSON.stringify(payload));
+  }
+
+  function decodeShare(str) {
+    var json;
+    try {
+      json = fromBase64Url(str);
+    } catch (e) {
+      return null;
+    }
+    var p;
+    try { p = JSON.parse(json); } catch (e) { return null; }
+    if (!p || p.v !== SHARE_VERSION || !Array.isArray(p.d)) return null;
+
+    var verdicts = p.d.map(function (row) {
+      return {
+        name: row[0],
+        range: row[1],
+        bucket: 'runtime',
+        status: row[4],
+        score: row[3] < 0 ? null : row[3],
+        findings: row[5] ? [{ level: row[4] === 'critical' ? 'critical' : 'info', text: row[5] }] : [],
+        data: { latest: row[2] }
+      };
+    });
+    return {
+      meta: { project: p.p, sharedAt: p.t },
+      summary: {
+        total: p.s.t,
+        scored: verdicts.filter(function (v) { return v.score !== null; }).length,
+        average: p.s.a,
+        criticalCount: p.s.c,
+        counts: countByStatus(verdicts)
+      },
+      verdicts: verdicts
+    };
+  }
+
+  function countByStatus(verdicts) {
+    var c = { critical: 0, risk: 0, watch: 0, healthy: 0, unknown: 0 };
+    verdicts.forEach(function (v) { c[v.status] = (c[v.status] || 0) + 1; });
+    return c;
+  }
+
+  // UTF-8 safe, URL-safe base64. Works in browsers and Node.
+  function toBase64Url(s) {
+    var bytes = encodeUtf8(s);
+    return b64encode(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function fromBase64Url(s) {
+    var b64 = s.replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    return decodeUtf8(b64decode(b64));
+  }
+
+  function encodeUtf8(str) {
+    if (typeof TextEncoder !== 'undefined') return new TextEncoder().encode(str);
+    return Uint8Array.from(Buffer.from(str, 'utf8'));
+  }
+
+  function decodeUtf8(bytes) {
+    if (typeof TextDecoder !== 'undefined') return new TextDecoder().decode(bytes);
+    return Buffer.from(bytes).toString('utf8');
+  }
+
+  function b64encode(bytes) {
+    if (typeof btoa === 'function') {
+      var bin = '';
+      for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin);
+    }
+    return Buffer.from(bytes).toString('base64');
+  }
+
+  function b64decode(b64) {
+    if (typeof atob === 'function') {
+      var bin = atob(b64);
+      var out = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      return out;
+    }
+    return Uint8Array.from(Buffer.from(b64, 'base64'));
+  }
+
+
   /**
    * Build the per-dependency verdict.
    * `d` is the raw collected data; `now` is a Date (injectable for tests).
@@ -339,6 +458,8 @@
     summarize: summarize,
     toMarkdown: toMarkdown,
     labelOf: labelOf,
+    encodeShare: encodeShare,
+    decodeShare: decodeShare,
     WEIGHTS: WEIGHTS
   };
 });

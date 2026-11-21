@@ -173,6 +173,11 @@ main { max-width: 960px; margin: 0 auto; padding: 40px 24px 72px; }
 
 .disclaimer { margin: 14px 0 0; font-size: 13px; color: var(--ink-3); }
 
+.share-note {
+  background: #eaf0ff; border: 1px solid #c7d7ff; color: #2a4fb8;
+  border-radius: 10px; padding: 12px 14px; font-size: 14px; margin: 0 0 16px;
+}
+
 /* --------------------------------------------------------- sections */
 
 section.method, section.pricing {
