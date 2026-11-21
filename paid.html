@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>依赖体检 · 专业版 ¥10 — 升级前 3 分钟摸清依赖底细</title>
+<meta name="description" content="把 package.json 变成一张能贴进 PR 的依赖风险清单：弃用包、停更包、大版本落后、已知漏洞。¥10 一次性买断，微信支付。">
+<meta property="og:title" content="依赖体检 · 专业版 ¥10">
+<meta property="og:description" content="升级前 3 分钟摸清依赖底细：弃用、停更、落后大版本、已知漏洞，一页说清。">
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#121821; --panel2:#18202b; --line:#243040;
+    --fg:#e7edf5; --mut:#93a3b8; --accent:#3ddc84; --warn:#ffb020; --bad:#ff5d5d;
+    --mono:ui-monospace,"SFMono-Regular",Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:40px 20px 80px}
+  .hero{display:grid;grid-template-columns:1fr 300px;gap:36px;align-items:start}
+  @media(max-width:760px){.hero{grid-template-columns:1fr}}
+  h1{font-size:34px;line-height:1.25;margin:0 0 12px;letter-spacing:-.02em}
+  .lead{color:var(--mut);font-size:17px;margin:0 0 24px}
+  .pill{display:inline-block;font:12px/1 var(--mono);color:var(--accent);border:1px solid var(--accent);
+        border-radius:999px;padding:6px 10px;margin-bottom:18px;letter-spacing:.06em}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .price{font-size:44px;font-weight:700;letter-spacing:-.03em}
+  .price small{font-size:15px;color:var(--mut);font-weight:400}
+  .qr{width:100%;max-width:260px;display:block;margin:14px auto;border-radius:10px;background:#fff;padding:8px}
+  .qr-note{text-align:center;font-size:13px;color:var(--mut);margin:6px 0 0}
+  ul.feats{list-style:none;padding:0;margin:24px 0 0}
+  ul.feats li{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+  ul.feats li:last-child{border:0}
+  .tick{color:var(--accent);flex:none;font-weight:700}
+  table{width:100%;border-collapse:collapse;font:13px/1.5 var(--mono);margin-top:10px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--mut);font-weight:600}
+  .tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:6px;margin-right:6px}
+  .t-bad{background:rgba(255,93,93,.15);color:var(--bad)}
+  .t-warn{background:rgba(255,176,32,.15);color:var(--warn)}
+  section{margin-top:48px}
+  h2{font-size:20px;margin:0 0 6px}
+  .mut{color:var(--mut);font-size:14px}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  a.btn{display:inline-block;padding:11px 18px;border-radius:9px;text-decoration:none;font-weight:600;font-size:15px}
+  .btn-primary{background:var(--accent);color:#05120a}
+  .btn-ghost{border:1px solid var(--line);color:var(--fg)}
+  .note{background:var(--panel2);border-left:3px solid var(--accent);padding:12px 16px;border-radius:8px;margin-top:18px;font-size:14px;color:var(--mut)}
+  footer{margin-top:56px;border-top:1px solid var(--line);padding-top:18px;font-size:13px;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div>
+      <div class="pill">PAID · 一次性买断</div>
+      <h1>升级前 3 分钟，摸清你那 40 个依赖到底谁在拖后腿</h1>
+      <p class="lead">
+        不用逐个去 npm 翻页。把 <code>package.json</code> 丢进来，得到一张能直接贴进 PR / 交接文档的
+        依赖风险清单：<b>哪些被官方弃用、哪些停更多久、落后几个大版本、有没有已知漏洞</b>。
+      </p>
+
+      <ul class="feats">
+        <li><span class="tick">✓</span><span><b>数据全部来自公开接口</b>（npm registry / deps.dev / OSV / npm downloads），每条结论可复核，不编造评分。</span></li>
+        <li><span class="tick">✓</span><span><b>导出 Markdown 与 JSON</b>，可直接当 PR 描述或周报附件。</span></li>
+        <li><span class="tick">✓</span><span><b>纯浏览器本地运行</b>，你的 package.json 不上传到任何服务器。</span></li>
+        <li><span class="tick">✓</span><span><b>含 48 个真实「弃用/停更」包速查表</b>，按周下载量排序，一眼看出哪些坑踩的人最多。</span></li>
+      </ul>
+
+      <div class="btns">
+        <a class="btn btn-primary" href="https://elsonshow.github.io/dep-health/">先白嫖免费版看看 →</a>
+        <a class="btn btn-ghost" href="https://elsonshow.github.io/dep-health/risk-index.html">看速查表 →</a>
+      </div>
+      <div class="note">
+        免费版本来就能用完整扫描。这 ¥10 买的是「<b>省下来的那半小时</b>」和「<b>可以直接交出去的一份东西</b>」——
+        你觉得值就付，不值就继续用免费版，没有套路。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="price">¥10 <small>一次性</small></div>
+      <p class="mut" style="margin:4px 0 0">微信支付 · 扫下方收款码</p>
+      <img class="qr" src="paid/pay-wechat.jpg" alt="微信收款码（乐在其中(*建)）" width="260" height="308">
+      <p class="qr-note">收款方：乐在其中(*建)</p>
+      <p class="qr-note">付款后请在仓库开一个 issue 说明已付，我会回来确认</p>
+    </div>
+  </div>
+
+  <section>
+    <h2>这张清单长什么样</h2>
+    <p class="mut">下面是真实跑出来的样例（来自公开数据，非编纂）。</p>
+    <table>
+      <thead><tr><th>依赖</th><th>问题</th><th>依据</th></tr></thead>
+      <tbody>
+        <tr><td>request</td><td><span class="tag t-bad">高危</span>弃用 + 停更 81 个月</td><td>npm deprecated · 最后发布 2019</td></tr>
+        <tr><td>inflight</td><td><span class="tag t-bad">高危</span>官方标记弃用（leaks memory）</td><td>npm deprecated 文案</td></tr>
+        <tr><td>punycode</td><td><span class="tag t-warn">关注</span>周下载 3.1 亿，停更 37 个月</td><td>versions 时间轴</td></tr>
+        <tr><td>axios@0.21.1</td><td><span class="tag t-bad">高危</span>24 个已知漏洞</td><td>OSV / GHSA</td></tr>
+        <tr><td>node-sass</td><td><span class="tag t-warn">关注</span>落后 4 个大版本</td><td>deps.dev latest</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>怎么算钱、怎么算到手</h2>
+    <p class="mut">想核对真实性？全部是可复现的公开数据源：</p>
+    <ul class="feats">
+      <li><span class="tick">·</span><code>registry.npmjs.org/&lt;pkg&gt;/latest</code> — 版本与 deprecated 标记</li>
+      <li><span class="tick">·</span><code>api.deps.dev/v3alpha/systems/npm/packages/&lt;pkg&gt;</code> — 发布时间线</li>
+      <li><span class="tick">·</span><code>api.osv.dev/v1/query</code> — 已知漏洞</li>
+      <li><span class="tick">·</span><code>api.npmjs.org/downloads/point/last-week/&lt;pkg&gt;</code> — 周下载量</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>依赖体检 · 在不登录、不传数据的前提下，把依赖风险变成能交出去的东西。</p>
+    <p class="mut">本页所有数字均可复核；页面本身为静态页，无任何追踪脚本。</p>
+  </footer>
+
+</div>
+</body>
+</html>
