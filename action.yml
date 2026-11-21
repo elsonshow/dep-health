@@ -1,0 +1,39 @@
+# 这是 GitHub Action 的入口：在 CI 里跑依赖体检，把报告写进 Job Summary。
+# 用法见 README。
+name: '依赖体检 DepHealth'
+description: '检查 package.json：npm 弃用标记、落后大版本、已知漏洞、停更风险。输出 Markdown 报告，可设置门禁让 PR 失败。'
+author: 'elsonshow'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  path:
+    description: 'package.json 的路径（相对仓库根目录）'
+    required: false
+    default: 'package.json'
+  fail-on:
+    description: '门禁等级：none（从不失败）/ critical（有弃用或高危漏洞则失败）/ risk（平均分 <65 或存在 critical 则失败）'
+    required: false
+    default: 'none'
+  max-deps:
+    description: '最多分析多少个依赖（0 表示不限制，默认 25）'
+    required: false
+    default: '25'
+  include-dev:
+    description: '是否包含 devDependencies（true/false）'
+    required: false
+    default: 'true'
+
+outputs:
+  score:
+    description: '平均健康分（0-100）'
+  critical:
+    description: '高危依赖数量'
+  report:
+    description: '完整 JSON 报告'
+
+runs:
+  using: 'node20'
+  main: 'action/index.js'

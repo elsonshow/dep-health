@@ -1,0 +1,30 @@
+# 复制到你的仓库：.github/workflows/dep-health.yml
+# 作用：PR 里自动跑依赖体检，报告写进 Job Summary，可按阈值拦住合并。
+name: 依赖体检
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 依赖体检
+        id: audit
+        uses: elsonshow/dep-health@v1
+        with:
+          path: package.json
+          fail-on: none          # none | critical | risk
+          include-dev: 'true'
+          max-deps: '25'
+
+      - name: 输出结果
+        run: |
+          echo "平均健康分: ${{ steps.audit.outputs.score }}"
+          echo "高危依赖数: ${{ steps.audit.outputs.critical }}"

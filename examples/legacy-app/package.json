@@ -1,0 +1,20 @@
+{
+  "name": "legacy-admin-dashboard",
+  "version": "2.4.0",
+  "private": true,
+  "description": "示例：一个 2021 年停止维护的前端后台项目。用于演示 DepHealth Action 的检出效果。",
+  "dependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "axios": "^0.21.1",
+    "moment": "^2.29.1",
+    "lodash": "^4.17.21",
+    "express": "^4.17.1",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "webpack": "^4.46.0",
+    "node-sass": "^5.0.0",
+    "typescript": "^4.5.0"
+  }
+}

@@ -42,6 +42,50 @@
 
 **所有计算都在你的浏览器里完成**，代码和 `package.json` 不会离开本机，站点不使用 Cookie、不加载任何第三方追踪脚本。
 
+## 在 CI 里用（GitHub Action）
+
+单次体检解决不了「持续」的问题。所以同一个引擎也做成了 Action：PR 里直接看到体检报告，还能按阈值拦住合并。
+
+```yaml
+# .github/workflows/dep-health.yml
+name: 依赖体检
+on: [pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: elsonshow/dep-health@v1
+        with:
+          path: package.json
+          fail-on: critical   # none | critical | risk
+```
+
+报告写进 Job Summary（PR 页面直接可见）。参数：
+
+| 输入 | 默认 | 说明 |
+| --- | --- | --- |
+| `path` | `package.json` | 要体检的清单文件 |
+| `fail-on` | `none` | `none` 只出报告；`critical` 有弃用或高危漏洞就失败；`risk` 平均分 <65 或存在 critical 就失败 |
+| `max-deps` | `25` | 最多分析多少个依赖，`0` 表示不限制 |
+| `include-dev` | `true` | 是否包含 devDependencies |
+
+| 输出 | 说明 |
+| --- | --- |
+| `score` | 平均健康分 |
+| `critical` | 高危依赖数量 |
+| `report` | 完整 JSON 报告 |
+
+这个仓库自己也在用它，配置文件见 [`docs/workflow-example.yml`](docs/workflow-example.yml)（直接复制到 `.github/workflows/` 即可）。示例项目 `examples/legacy-app` 是一个 2021 年停更的项目，故意留着一堆问题用来演示门禁。
+
+> 说明：Action 的逻辑已在本地用真实数据验证（`node action/index.js`，含 `fail-on=critical` 返回 exit 1），
+> 但**尚未在 GitHub Actions 上真实跑过一次** —— 仓库所有者当前的 gh token 没有 `workflow` 权限，无法推送 workflow 文件。
+> 这一条等权限开通后补上，不做虚假声明。
+
 ## 健康分怎么算
 
 从 100 分开始扣，扣分明细全部显示在结果里：
