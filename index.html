@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>依赖体检 DepHealth — 粘贴 package.json，30 秒拿到依赖风险清单</title>
+<meta name="description" content="粘贴 package.json，在浏览器里做一次依赖体检：每个包的落后版本、npm 弃用标记、已知漏洞、下载量与被弃坑风险，给出 0-100 健康分和可直接贴进 PR 的 Markdown 报告。不上传任何代码。">
+<meta name="keywords" content="npm 依赖检查,package.json 审计,依赖健康度,npm 弃用,依赖漏洞扫描,前端依赖升级">
+<meta property="og:title" content="依赖体检 DepHealth">
+<meta property="og:description" content="粘贴 package.json，30 秒拿到依赖风险清单。浏览器本地计算，不上传代码。">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://elsonshow.github.io/dep-health/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🩺</text></svg>">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="./">
+    <span class="brand-mark" aria-hidden="true">🩺</span>
+    <span class="brand-text">依赖体检 <b>DepHealth</b></span>
+  </a>
+  <nav class="site-nav">
+    <a href="#method">评分口径</a>
+    <a href="#pricing">早期访问</a>
+    <a href="https://github.com/elsonshow/dep-health" rel="noopener">GitHub</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">v0.1 · 早期版本 · 免费</p>
+    <h1>把 <code>package.json</code> 变成一张风险清单</h1>
+    <p class="lede">
+      粘贴 → 30 秒 → 每个依赖的<b>健康分</b>：落后几个大版本、是否被 npm 标记弃用、
+      当前版本有没有已知漏洞、下载量是否已崩、许可证是否踩雷。
+      报告可一键复制成 Markdown，直接贴进 PR。
+    </p>
+    <ul class="hero-points">
+      <li>✅ 纯浏览器本地计算，<b>不上传任何代码</b></li>
+      <li>✅ 数据来自 npm registry / deps.dev / OSV.dev 官方接口</li>
+      <li>✅ 每个结论都标出依据，可复核</li>
+    </ul>
+  </section>
+
+  <section class="tool" id="tool">
+    <div class="panel">
+      <div class="panel-head">
+        <label for="manifest">粘贴你的 package.json</label>
+        <div class="panel-actions">
+          <button type="button" class="btn ghost" id="btn-sample">载入示例</button>
+          <button type="button" class="btn primary" id="btn-run">开始体检</button>
+        </div>
+      </div>
+      <textarea id="manifest" spellcheck="false" placeholder='{
+  "name": "my-app",
+  "dependencies": {
+    "react": "^17.0.2",
+    "axios": "^0.21.1"
+  }
+}'></textarea>
+      <div class="panel-foot">
+        <label class="check"><input type="checkbox" id="opt-dev" checked> 包含 devDependencies</label>
+        <span class="hint">只读取依赖名和版本区间；最多分析 25 个依赖。</span>
+      </div>
+      <div class="progress" id="progress" hidden>
+        <div class="progress-bar"><i id="progress-bar"></i></div>
+        <span id="progress-text"></span>
+      </div>
+      <div class="error" id="error" hidden></div>
+    </div>
+  </section>
+
+  <section id="results" hidden>
+    <div class="summary" id="summary"></div>
+    <div class="results-head">
+      <h2>逐项结论</h2>
+      <div class="results-actions">
+        <button type="button" class="btn ghost" id="btn-copy-md">复制 Markdown 报告</button>
+        <button type="button" class="btn ghost" id="btn-copy-json">复制 JSON</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="deps-table">
+        <thead>
+          <tr>
+            <th>依赖</th><th class="num">区间</th><th class="num">最新</th>
+            <th class="num">健康分</th><th>状态</th><th>主要问题</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="disclaimer">
+      健康分是<b>启发式建议</b>，不是安全认证。漏洞数据来自 OSV.dev，可能存在报告延迟；
+      「区间下限」是你声明的最低可解析版本，包管理器实际安装的版本可能更高。
+      上线前请以 <code>npm audit</code> 与人工评审为准。
+    </p>
+  </section>
+
+  <section class="method" id="method">
+    <h2>评分口径（完全公开）</h2>
+    <p class="section-lede">健康分从 100 开始，按下表扣分后截断到 0–100。所有扣分项都在报告里写明原因。</p>
+    <table class="weights">
+      <thead><tr><th>维度</th><th>扣分</th><th>判定依据</th></tr></thead>
+      <tbody>
+        <tr><td>已被 npm 弃用</td><td>直接压到 ≤12</td><td>registry 的 <code>deprecated</code> 字段非空</td></tr>
+        <tr><td>落后大版本</td><td>每个 −22，最多 −60</td><td>区间下限 major &lt; 最新 major</td></tr>
+        <tr><td>落后小/补丁版本</td><td>−7 / −2</td><td>major 相同，minor/patch 落后</td></tr>
+        <tr><td>停更像</td><td>最多 −18</td><td>最新版本发布距今 ≥24 / ≥12 / ≥6 个月</td></tr>
+        <tr><td>下载量低</td><td>最多 −12</td><td>周下载 &lt;500 / &lt;5000 / &lt;5 万</td></tr>
+        <tr><td>已知漏洞</td><td>最多 −45</td><td>OSV.dev 针对区间下限版本的报告，按严重度加权</td></tr>
+        <tr><td>依赖过重</td><td>−6</td><td>最新版本自身声明 ≥20 个直接依赖</td></tr>
+        <tr><td>许可证合规</td><td>−6</td><td>运行时依赖为 GPL/AGPL/MPL 等 copyleft</td></tr>
+      </tbody>
+    </table>
+    <p class="section-lede small">
+      状态阈值：≥85 健康 · 65–84 关注 · 40–64 风险 · &lt;40 高危。
+    </p>
+  </section>
+
+  <section class="pricing" id="pricing">
+    <h2>现在免费，之后怎么收费</h2>
+    <p class="section-lede">
+      这个工具是免费的单次体检。真正的痛点在「持续」：你不可能每次 <code>npm install</code> 前都来粘一次。
+      我打算做的是 <b>CI 集成 + 依赖策略规则（Allowlist / 许可证 / 停更阈值）+ 变更追踪</b>，按团队收费。
+    </p>
+    <div class="plan-grid">
+      <div class="plan">
+        <h3>免费</h3>
+        <p class="price">¥0</p>
+        <ul><li>单次体检，无数量限制</li><li>Markdown / JSON 导出</li></ul>
+      </div>
+      <div class="plan featured">
+        <h3>团队版（未上线，征集中）</h3>
+        <p class="price">待定</p>
+        <ul>
+          <li>GitHub Action：PR 自动评论体检结果</li>
+          <li>自定义阈值与 allowlist</li>
+          <li>依赖变更历史与周报</li>
+        </ul>
+      </div>
+    </div>
+    <p class="cta-line">
+      如果你真的会为它付钱，请点这里告诉我你的场景 ——
+      这比任何问卷都真实，也决定我要不要继续做：
+      <a class="btn primary" href="https://github.com/elsonshow/dep-health/issues/new?template=early-access.yml" rel="noopener">登记付费意向</a>
+    </p>
+    <p class="fineprint">不开玩笑：如果登记人数是 0，这个项目就会停在第 0.1 版，我不会假装它有市场。</p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>
+    依赖体检 DepHealth · 数据来源：npm registry、deps.dev、OSV.dev ·
+    <a href="https://github.com/elsonshow/dep-health" rel="noopener">源码</a> ·
+    <a href="https://github.com/elsonshow/dep-health/issues" rel="noopener">反馈</a>
+  </p>
+  <p class="fineprint">MIT License · 本站不收集个人数据、不设置 Cookie、不使用第三方追踪脚本。</p>
+</footer>
+
+<script src="assets/engine.js"></script>
+<script src="assets/samples.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

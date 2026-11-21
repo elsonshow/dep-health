@@ -1,0 +1,29 @@
+name: 反馈 / 误报
+description: 报告一个错误的判断、拿不到数据的包，或提一个功能建议
+title: "[反馈] "
+labels: ["feedback"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 类型
+      options:
+        - 误报（分数/结论不合理）
+        - 漏报（应该报的问题没报）
+        - 某个包拿不到数据
+        - 界面 / 体验
+        - 新功能建议
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: 发生了什么
+      description: 如果能贴出相关的 package.json 片段（去掉敏感信息）会更好排查
+    validations:
+      required: true
+  - type: input
+    id: package
+    attributes:
+      label: 涉及的包名（如有）
+      placeholder: 例如 axios@0.21.1

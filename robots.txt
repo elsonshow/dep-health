@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://elsonshow.github.io/dep-health/sitemap.xml

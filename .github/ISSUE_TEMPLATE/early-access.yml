@@ -1,0 +1,50 @@
+name: 付费意向登记
+description: 如果你会为「依赖体检」的团队版 / CI 集成付费，在这里登记（决定要不要继续做）
+title: "[付费意向] "
+labels: ["pricing-intent"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        谢谢。这里只做一件事：收集**真实的付费意愿**，用来判断要不要继续投入。
+        不需要留邮箱、不会有人打电话、也不会自动订阅任何东西。
+
+        如果登记人数是 0，这个项目就停在 v0.1，我不会把它包装成一个假装的生意。
+  - type: dropdown
+    id: price
+    attributes:
+      label: 你能接受的月付价格（团队规模按 5 人以内估）
+      options:
+        - 不会付费，只用免费版
+        - ¥29 / 月以内
+        - ¥99 / 月以内
+        - ¥299 / 月以内
+        - ¥299 / 月以上
+        - 按席位另议
+    validations:
+      required: true
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 你会在什么场景下用它
+      description: 越具体越好，比如「每次 Renovate PR 都要人工看一遍有没有引入停更依赖」
+      placeholder: 例如：我们团队 7 个人，每两周升级一次依赖，升级前需要一张风险清单给 tech lead 签字。
+    validations:
+      required: true
+  - type: input
+    id: team
+    attributes:
+      label: 团队规模
+      placeholder: 例如 7 人 / 个人项目
+  - type: dropdown
+    id: feature
+    attributes:
+      label: 最想要哪个功能
+      options:
+        - GitHub Action（PR 自动评论）
+        - 自定义阈值 / allowlist 门禁
+        - 依赖变更历史与周报
+        - 传递依赖全量扫描
+        - 其他（写在场景里）
+    validations:
+      required: true
