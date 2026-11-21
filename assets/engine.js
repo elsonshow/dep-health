@@ -447,6 +447,157 @@
     }[status] || status;
   }
 
+  /* ----------------------------------------------------- deliverable report */
+  /*
+   * 这份 HTML 是「可交付物」：买断版承诺给的东西必须真实存在，而不是同一张表换个名字。
+   * 与免费表格的差别只有两点，但都是实的：
+   *   1. 给出**处理顺序**（先升哪个、后升哪个），免费表只是逐项结论
+   *   2. 每条结论都附**证据行 + 数据来源**，能直接交给 tech lead 签字
+   * 不编造「升级到 X 就修好了」这类无法从数据推出的结论。
+   */
+
+  function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function suggestedAction(v) {
+    var out = [];
+    var d = v.data || {};
+    if (d.deprecated) {
+      out.push('npm 已标记弃用：优先替换。弃用包的后续 patch 不再保证，继续使用需自行承担维护风险。');
+    }
+    if (v.lag && v.lag.level === 'major' && d.latest) {
+      out.push('跨越大版本：先读 ' + v.name + ' 从 ' + fmt(v.data.installed) + ' 到 ' + d.latest + ' 的 breaking changes，再单独开 PR 升级。');
+    }
+    if (d.vulns && d.vulns.length) {
+      out.push('存在已知漏洞：查对应 advisory 的修复版本，或评估能否先升级到无漏洞的版本。');
+    }
+    if (d.publishedAt) {
+      var age = monthsBetween(d.publishedAt, new Date());
+      if (age !== null && age >= 24) out.push('上游已 ' + Math.round(age) + ' 个月未发版：确认是否还有替代方案。');
+    }
+    if (!out.length) out.push('未发现需要立刻处理的问题，保持当前版本即可。');
+    return out;
+  }
+
+  function priorityOrder(verdicts) {
+    return verdicts.slice().sort(function (a, b) {
+      var ca = a.findings.some(function (f) { return f.level === 'critical'; }) ? 0 : 1;
+      var cb = b.findings.some(function (f) { return f.level === 'critical'; }) ? 0 : 1;
+      if (ca !== cb) return ca - cb;
+      return (a.score === null ? 101 : a.score) - (b.score === null ? 101 : b.score);
+    });
+  }
+
+  function buildReportHtml(summary, verdicts, meta) {
+    meta = meta || {};
+    var now = new Date();
+    var ordered = priorityOrder(verdicts);
+    var top = ordered.slice(0, 5);
+
+    var verdictLine = summary.average === null
+      ? '无法计算平均分。'
+      : summary.average >= 85 ? '整体健康状况良好，没有必须立刻处理的依赖。'
+        : summary.average >= 65 ? '整体尚可，但存在需要排期处理的依赖。'
+          : summary.average >= 40 ? '存在明显风险，建议在下次发布前排期处理。'
+            : '风险较高，建议优先处理下列依赖再继续迭代。';
+
+    var priorityHtml = top.map(function (v, i) {
+      var acts = suggestedAction(v);
+      var evidence = sortFindingsLocal(v.findings).slice(0, 3);
+      return '<div class="p">' +
+        '<div class="p-rank">' + (i + 1) + '</div>' +
+        '<div class="p-body">' +
+        '<h3>' + escHtml(v.name) + ' <span class="badge ' + v.status + '">' + escHtml(labelOf(v.status)) + '</span>' +
+        '<span class="score">' + (v.score === null ? '—' : v.score) + '/100</span></h3>' +
+        '<div class="meta">区间 <code>' + escHtml(v.range) + '</code>' +
+        (v.data && v.data.latest ? ' · 最新 <code>' + escHtml(v.data.latest) + '</code>' : '') +
+        (v.data && v.data.weeklyDownloads != null ? ' · 周下载 ' + escHtml(fmtNum(v.data.weeklyDownloads)) : '') +
+        '</div>' +
+        '<ul class="ev">' + evidence.map(function (f) {
+          return '<li class="lvl ' + f.level + '">' + escHtml(f.text) + '</li>';
+        }).join('') + '</ul>' +
+        '<div class="act"><b>建议动作：</b>' + acts.map(function (a) { return escHtml(a); }).join(' ') + '</div>' +
+        '</div></div>';
+    }).join('');
+
+    var rowsHtml = ordered.map(function (v) {
+      var f = sortFindingsLocal(v.findings);
+      return '<tr>' +
+        '<td class="n">' + escHtml(v.name) + '</td>' +
+        '<td class="c"><code>' + escHtml(v.range) + '</code></td>' +
+        '<td class="c"><code>' + escHtml((v.data && v.data.latest) || '—') + '</code></td>' +
+        '<td class="c">' + (v.score === null ? '—' : v.score) + '</td>' +
+        '<td class="c"><span class="badge ' + v.status + '">' + escHtml(labelOf(v.status)) + '</span></td>' +
+        '<td>' + (f.length ? '<ul class="ev">' + f.map(function (x) {
+          return '<li class="lvl ' + x.level + '">' + escHtml(x.text) + '</li>';
+        }).join('') + '</ul>' : '<span class="lvl ok">无问题</span>') + '</td>' +
+        '</tr>';
+    }).join('');
+
+    return '<!DOCTYPE html>\n<html lang="zh-CN"><head><meta charset="utf-8">' +
+      '<title>依赖体检报告 · ' + escHtml(meta.project || '未命名项目') + '</title>' +
+      '<style>' +
+      'body{font:15px/1.65 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:#12161f;max-width:900px;margin:0 auto;padding:48px 28px;background:#fff}' +
+      'h1{font-size:28px;margin:0 0 6px;letter-spacing:-.02em}h2{font-size:19px;margin:36px 0 12px;padding-bottom:6px;border-bottom:1px solid #e3e6ec}' +
+      '.sub{color:#79818f;font-size:13px;margin-bottom:26px}' +
+      '.kpis{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0}' +
+      '.kpi{border:1px solid #e3e6ec;border-radius:10px;padding:12px 16px;min-width:120px}' +
+      '.kpi b{display:block;font-size:26px;letter-spacing:-.02em}.kpi span{font-size:12px;color:#79818f}' +
+      '.p{display:flex;gap:14px;border:1px solid #e3e6ec;border-radius:10px;padding:14px 16px;margin-bottom:10px}' +
+      '.p-rank{font:600 20px/1 ui-monospace,monospace;color:#2f6df6;flex:none;width:26px}' +
+      '.p-body{flex:1}.p h3{margin:0 0 4px;font-size:16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}' +
+      '.score{margin-left:auto;font:600 15px ui-monospace,monospace;color:#48505e}' +
+      '.meta{font-size:12px;color:#79818f;margin-bottom:6px}' +
+      'ul.ev{margin:4px 0;padding-left:18px;font-size:13px}ul.ev li{margin:2px 0}' +
+      '.act{font-size:13px;background:#f7f8fa;border-radius:8px;padding:8px 10px;margin-top:6px}' +
+      'table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}' +
+      'th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#79818f;border-bottom:1px solid #e3e6ec;padding:8px 10px}' +
+      'td{border-bottom:1px solid #f0f2f6;padding:10px;vertical-align:top}' +
+      'td.n{font-family:ui-monospace,monospace;font-weight:600;white-space:nowrap}td.c{text-align:right;white-space:nowrap}' +
+      '.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600}' +
+      '.badge.healthy{background:#e9f7ef;color:#157347}.badge.watch{background:#fdf8e3;color:#8a6b00}' +
+      '.badge.risk{background:#fff4e5;color:#c26a00}.badge.critical{background:#fdecef;color:#c0263a}' +
+      '.badge.unknown{background:#eef1f6;color:#79818f}' +
+      '.lvl.critical,.lvl.high{color:#c0263a}.lvl.medium{color:#c26a00}.lvl.low{color:#48505e}.lvl.ok{color:#157347}.lvl.info{color:#79818f}' +
+      '.note{font-size:12px;color:#79818f;border-top:1px solid #e3e6ec;margin-top:36px;padding-top:14px}' +
+      '@media print{body{padding:0}.p{break-inside:avoid}}' +
+      '</style></head><body>' +
+      '<h1>依赖体检报告</h1>' +
+      '<div class="sub">项目：<b>' + escHtml(meta.project || '未命名') + '</b> · 生成时间 ' +
+      now.toISOString().slice(0, 16).replace('T', ' ') + ' UTC · 引擎 v' + escHtml(meta.engineVersion || '0.1') + '</div>' +
+      '<div class="kpis">' +
+      '<div class="kpi"><b>' + (summary.average === null ? '—' : summary.average) + '</b><span>平均健康分 /100</span></div>' +
+      '<div class="kpi"><b>' + summary.total + '</b><span>依赖总数</span></div>' +
+      '<div class="kpi"><b style="color:#c0263a">' + summary.criticalCount + '</b><span>高危依赖</span></div>' +
+      '<div class="kpi"><b>' + (summary.counts.watch || 0) + '</b><span>需关注</span></div>' +
+      '</div>' +
+      '<p>' + escHtml(verdictLine) + '</p>' +
+      '<h2>建议处理顺序</h2>' +
+      '<p class="sub" style="margin-bottom:12px">按「是否高危 → 健康分从低到高」排序。跨大版本的建议单独开 PR，不要和功能改动混在一起。</p>' +
+      (priorityHtml || '<p>没有依赖需要处理。</p>') +
+      '<h2>全部依赖明细</h2>' +
+      '<table><thead><tr><th>依赖</th><th>区间</th><th>最新</th><th>分数</th><th>状态</th><th>结论与证据</th></tr></thead>' +
+      '<tbody>' + rowsHtml + '</tbody></table>' +
+      '<h2>数据来源与口径</h2>' +
+      '<p class="sub" style="margin:0">最新版本/弃用标记/许可证：registry.npmjs.org；版本发布时间：api.deps.dev；周下载量：api.npmjs.org；已知漏洞：api.osv.dev（针对「区间下限」版本查询）。' +
+      '健康分模型公开：弃用压到 ≤12，跨大版本每级 −22（最多 −60），停更最多 −18，下载量低最多 −12，漏洞最多 −45。</p>' +
+      '<div class="note">本报告是启发式建议，不是安全认证。漏洞数据依赖 OSV 的上游报告，可能存在延迟；「区间下限」是你声明的最低可解析版本，包管理器实际安装的可能更高。' +
+      '上线前仍应以 <code>npm audit</code> 与人工评审为准。生成工具：依赖体检 DepHealth（https://elsonshow.github.io/dep-health/）。</div>' +
+      '</body></html>';
+  }
+
+  function sortFindingsLocal(findings) {
+    var order = { critical: 0, high: 1, medium: 2, low: 3, info: 4, ok: 5 };
+    return (findings || []).slice().sort(function (a, b) {
+      return (order[a.level] === undefined ? 9 : order[a.level]) -
+             (order[b.level] === undefined ? 9 : order[b.level]);
+    });
+  }
+
+
   return {
     parseVersion: parseVersion,
     cmp: cmp,
@@ -460,6 +611,7 @@
     labelOf: labelOf,
     encodeShare: encodeShare,
     decodeShare: decodeShare,
+    buildReportHtml: buildReportHtml,
     WEIGHTS: WEIGHTS
   };
 });

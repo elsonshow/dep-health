@@ -23,6 +23,7 @@
     copyMd: document.getElementById('btn-copy-md'),
     copyJson: document.getElementById('btn-copy-json'),
     share: document.getElementById('btn-share'),
+    reportBtn: document.getElementById('btn-report'),
     shareNote: document.getElementById('share-note')
   };
 
@@ -238,6 +239,25 @@
   // Ctrl/Cmd+Enter to run
   el.manifest.addEventListener('keydown', function (e) {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') run();
+  });
+
+  // 交付报告：可下载的独立 HTML，含处理顺序与逐条证据
+  el.reportBtn.addEventListener('click', function () {
+    if (!state.summary) return;
+    var html = Eng.buildReportHtml(state.summary, state.verdicts, {
+      project: (state.meta && state.meta.project) || '未命名',
+      engineVersion: '0.1'
+    });
+    var safeName = String((state.meta && state.meta.project) || 'report').replace(/[^\w\u4e00-\u9fa5.-]/g, '_').slice(0, 40);
+    var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '依赖体检-' + safeName + '-' + new Date().toISOString().slice(0, 10) + '.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   });
 
   // 分享链接：把结论表压进 URL fragment，不经过任何服务器
