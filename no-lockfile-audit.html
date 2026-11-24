@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>还没装依赖的时候，怎么查依赖的漏洞？</title>
+<meta name="description" content="npm audit 在缺 lockfile 时会直接报 ENOLOCK 拒绝工作。实测对比：同一份 package.json，npm audit 一行不给，只读清单的工具能列出 32 个已知漏洞。附代价说明与门禁取舍。">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://elsonshow.github.io/dep-health/no-lockfile-audit.html">
+<style>
+:root{--bg:#f7f2e8;--fg:#2b2824;--mut:#6b6157;--line:#e8ddcd;--acc:#a65b38;--code-bg:#f0e9dc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.85 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+main{max-width:760px;margin:0 auto;padding:48px 22px 96px}
+h1{font-size:30px;line-height:1.35;margin:0 0 20px;letter-spacing:-.01em}
+h2{font-size:22px;margin:40px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h3{font-size:18px;margin:28px 0 10px}
+p{margin:14px 0}
+ul,ol{margin:14px 0;padding-left:24px}
+li{margin:7px 0}
+code{background:var(--code-bg);padding:2px 6px;border-radius:4px;font:14px/1.6 ui-monospace,Consolas,monospace}
+pre{background:var(--code-bg);padding:16px;border-radius:8px;overflow-x:auto;border:1px solid var(--line)}
+pre code{background:none;padding:0;font-size:13.5px}
+blockquote{margin:20px 0;padding:12px 18px;border-left:3px solid var(--acc);background:#fbf7ef;color:var(--mut)}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:#f0e9dc;font-weight:600}
+a{color:var(--acc)}
+hr{border:0;border-top:1px solid var(--line);margin:36px 0}
+.top{margin-bottom:28px;font:13px ui-monospace,Consolas,monospace}
+.top a{text-decoration:none}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--mut);font-size:13.5px}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><a href="./">← 依赖体检 DepHealth</a></div>
+<article>
+<h1>还没装依赖的时候，怎么查依赖的漏洞？</h1>
+<blockquote>本文所有输出都是实测，可复现。工具：<code>elsonshow/dep-health</code>。</blockquote>
+<h2>一个具体的困境</h2>
+<p>你 <code>git clone</code> 了一个仓库，或者同事发来一份 <code>package.json</code> 让你评一评，</p>
+<p>你想知道「这些依赖有没有已知漏洞」。</p>
+<p>第一反应是 <code>npm audit</code>。那就试试。</p>
+<h2>实测：<code>npm audit</code> 在这个场景会直接拒绝</h2>
+<p>目录里只有 <code>package.json</code>：</p>
+<pre><code class="lang-json">{
+  "dependencies": {
+    "axios": "^0.21.1",
+    "lodash": "^4.17.21",
+    "jsonwebtoken": "^8.5.1"
+  }
+}</code></pre>
+<p>跑 <code>npm audit</code>：</p>
+<pre><code>$ npm audit
+npm error code ENOLOCK
+npm error audit This command requires an existing lockfile.
+npm error audit Try creating one first with: npm i --package-lock-only
+npm error audit Original error: loadVirtual requires existing shrinkwrap file</code></pre>
+<p><strong>它宁可报错也不给你结果。</strong> 这不是 bug——<code>npm audit</code> 的正确性建立在 lockfile 上：</p>
+<p>只有知道<strong>精确锁定的版本</strong>，它才能给出准确的漏洞列表。</p>
+<p>问题在于，你此刻恰恰没有 lockfile。</p>
+<h2>这个场景比看上去常见</h2>
+<ul>
+<li><strong>刚 clone 一个仓库</strong>，还没跑 <code>npm install</code></li>
+<li><strong>评审外包/供应商交付的代码</strong>，只有 <code>package.json</code></li>
+<li><strong>决定要不要引入某个依赖</strong>之前，先看看它有坑没</li>
+<li>仓库用 <strong>pnpm / yarn</strong>，而你在 npm 下跑 <code>audit</code>（多数情况下也拿不到结果）</li>
+<li>CI 里想做一个<strong>安装之前</strong>的快速筛查，不想为了检查先花几分钟装依赖</li>
+</ul>
+<h2>换成只读 package.json 的工具</h2>
+<p>同一份 <code>package.json</code>，不装依赖，直接分析：</p>
+<pre><code>平均健康分 51/100 · 高危 0
+
+包              分数   状态      已知漏洞
+axios            33   critical    24
+lodash           70   watch        2
+jsonwebtoken     50   risk         3</code></pre>
+<p>具体到每个包：</p>
+<ul>
+<li><strong>axios</strong> — 范围下限 <code>0.21.1</code> 有 <strong>24 个</strong>已知漏洞（最高 MODERATE）</li>
+<li><strong>lodash</strong> — 范围下限 <code>4.17.21</code> 有 <strong>2 个</strong>已知漏洞（最高 MODERATE）</li>
+<li><strong>jsonwebtoken</strong> — 范围下限 <code>8.5.1</code> 有 <strong>3 个</strong>已知漏洞（最高 MODERATE）</li>
+</ul>
+<p><code>npm audit</code> 一行都不给你，这边直接列出 32 个。</p>
+<h2>但必须说清这个方法的代价</h2>
+<p>上面的输出有一句关键的话，别跳过：</p>
+<blockquote>范围下限 0.21.1 有 24 个已知漏洞；<strong>实际安装的可能已是 1.21.1</strong>，请以 <code>npm ls</code> 为准</blockquote>
+<p>原因很直接：没有 lockfile，就不知道你实际会装哪个版本。</p>
+<p>工具只能拿 <code>package.json</code> 里<strong>能确定的下界</strong>（<code>^0.21.1</code> 的下界是 <code>0.21.1</code>）去查漏洞。</p>
+<p>所以：</p>
+<ul>
+<li><code>^0.21.1</code> 实际可能装到 <code>1.21.1</code>，而 <code>1.21.1</code> 是 0 漏洞 → <strong>24 这个数字是上界，不是事实</strong></li>
+<li>反过来，如果你写死了 <code>"axios": "0.21.1"</code>，那 <code>0.21.1</code> 就是你会装的版本 → <strong>24 是事实</strong></li>
+</ul>
+<p><strong>结论：这个数字是「最坏情况」，不是「你的现状」。</strong></p>
+<h2>所以两者该怎么用</h2>
+<table><tr><th>你想做的事</th><th>用什么</th></tr><tr><td>已经装了依赖，要精确漏洞报告</td><td><code>npm audit</code>（更准，基于 lockfile）</td></tr><tr><td>还没装依赖，先快速看风险面</td><td>只读 <code>package.json</code> 的工具</td></tr><tr><td>在 PR 里按阈值拦住合并</td><td>GitHub Action 的 <code>fail-on</code></td></tr><tr><td>需要合规级 SBOM / 供应链证明</td><td>Snyk / Socket 等商业方案</td></tr></table>
+<p><strong>如果你已经有 lockfile 且只在本地用，<code>npm audit</code> 够用，不必换工具。</strong> 这句话我写在 README 里，也写在这里。</p>
+<h2>一个必须提的设计取舍</h2>
+<p>因为这个数字是「最坏情况」，如果直接拿它阻断 CI，会误伤大量正常项目。</p>
+<p>实测过的例子：一个只写了 <code>axios ^1.7.9</code> 的项目，</p>
+<p>下限 <code>1.7.9</code> 有 33 个漏洞，但 <code>^1.7.9</code> 实际会解析到 <code>1.21.1</code>（0 漏洞）。</p>
+<p>如果直接拿 33 去卡，一个依赖全在可升级范围内的项目会被判成「不安全」。</p>
+<p>所以门禁做了区分：</p>
+<ul>
+<li><strong>可升级范围</strong>（<code>^</code> / <code>~</code> 开头，且存在更高版本）→ 下限漏洞<strong>不阻断</strong></li>
+<li><strong>精确锁定</strong>（<code>1.7.9</code>）→ 下限就是实际版本，漏洞<strong>阻断</strong></li>
+<li><strong>已被官方弃用</strong> → 不论写法都阻断</li>
+<li><strong>已在最新版且仍有 HIGH 漏洞</strong> → 阻断（升无可升）</li>
+</ul>
+<p>这不是为了消误报而放水——精确锁死的项目仍然会被拦住。</p>
+<h2>自己复现</h2>
+<pre><code class="lang-bash"># 1. 造一个只有 package.json 的目录
+mkdir demo &amp;&amp; cd demo
+cat &gt; package.json &lt;&lt;'EOF'
+{
+  "dependencies": {
+    "axios": "^0.21.1",
+    "lodash": "^4.17.21",
+    "jsonwebtoken": "^8.5.1"
+  }
+}
+EOF
+
+# 2. npm audit 会拒绝
+npm audit          # -&gt; ENOLOCK
+
+# 3. 用只读 package.json 的工具
+#    在线：https://elsonshow.github.io/dep-health/
+#    或在 CI 里：uses: elsonshow/dep-health@v1</code></pre>
+<p>数据来自 <code>registry.npmjs.org</code>、<code>api.deps.dev</code>、<code>api.npmjs.org</code>、<code>api.osv.dev</code>，</p>
+<p>全部是公开只读接口，不需要 token，不上传你的代码。</p>
+<h2>一句话总结</h2>
+<p><code>npm audit</code> 更强，但它要求你先装依赖。</p>
+<p><strong>这个工具填的是「你还没装、但想先知道」的那几分钟。</strong></p>
+<p>它不是替代品，它填的是一个空档。</p>
+</article>
+<footer>数据与脚本开源：<a href="https://github.com/elsonshow/dep-health">github.com/elsonshow/dep-health</a></footer>
+</main>
+</body>
+</html>
