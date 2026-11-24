@@ -80,6 +80,9 @@ npm error audit This command requires an existing lockfile.
 
 不是营销页，是拿 npm 公开接口跑出来的数据和分析，脚本可复现：
 
+- **[还没装依赖的时候，怎么查依赖的漏洞？](https://elsonshow.github.io/dep-health/no-lockfile-audit.html)**
+  —— npm audit 缺 lockfile 会直接 ENOLOCK，这篇用实测对比说明这一空档，也写清了代价。
+
 - **[依赖里出现 deprecated 警告，到底要不要管？48 个包的实测答案](https://elsonshow.github.io/dep-health/deprecated-warning.html)**
   —— 把弃用包分成「不用管 / 值得排期 / 必须尽快处理」三档，附 30 秒自查命令。
 - **[npm 依赖现状实测：34 个已被官方弃用的包，每周仍被下载 6.92 亿次](https://elsonshow.github.io/dep-health/npm-deprecated-2026-11.html)**
