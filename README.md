@@ -10,6 +10,39 @@
 
 ---
 
+### 它和 npm audit 什么关系
+
+**结论先说：大部分场景结论重叠，它不是替代品。** 它填的是 `npm audit` 用不了的时刻。
+
+`npm audit` 有一个硬前提——必须有 lockfile。实测：
+
+```
+$ npm audit
+npm error code ENOLOCK
+npm error audit This command requires an existing lockfile.
+```
+
+所以下面这些场景它直接拒绝工作：
+
+- 刚 `git clone` 一个仓库、还没 `npm install`
+- 同事/供应商发来一份 `package.json` 让你评审
+- 在决定「要不要引入这个依赖」之前
+- 仓库用 pnpm / yarn，而你在 npm 下跑 audit
+
+本工具只读 `package.json`，不需要 lockfile，因此这些场景仍能给出结论。
+代价是它只能按**范围下限**估算（见下节），精度不如基于 lockfile 的 `npm audit`。
+
+**该用哪个**
+
+| 场景 | 用什么 |
+| --- | --- |
+| 已经装了依赖，要精确漏洞报告 | `npm audit`（更准） |
+| 还没装依赖，先快速看风险面 | 本工具 |
+| 想在 PR 里按阈值拦住合并 | 本工具的 GitHub Action（`fail-on`） |
+| 需要合规级 SBOM / 供应链证明 | Snyk / Socket 等商业方案 |
+
+写得再直白一点：如果你已经有 lockfile 且只在本地用，`npm audit` 够用，不必换工具。
+
 ## 它解决什么问题
 
 一个用了三年没大改的项目，`package.json` 里通常躺着：
