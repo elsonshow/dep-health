@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>依赖里出现 deprecated 警告，到底要不要管？48 个包的实测答案</title>
+<meta name="description" content="看到 npm deprecated 警告要不要处理？按「不用管 / 值得排期 / 必须尽快处理」三档给出具体动作，附 30 秒自查命令。数据来自 npm registry 公开接口，可复现。">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://elsonshow.github.io/dep-health/deprecated-warning.html">
+<style>
+:root{--bg:#f7f2e8;--fg:#2b2824;--mut:#6b6157;--line:#e8ddcd;--acc:#a65b38;--code-bg:#f0e9dc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.85 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+main{max-width:760px;margin:0 auto;padding:48px 22px 96px}
+h1{font-size:30px;line-height:1.35;margin:0 0 20px;letter-spacing:-.01em}
+h2{font-size:22px;margin:40px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h3{font-size:18px;margin:28px 0 10px}
+p{margin:14px 0}
+ul,ol{margin:14px 0;padding-left:24px}
+li{margin:7px 0}
+code{background:var(--code-bg);padding:2px 6px;border-radius:4px;font:14px/1.6 ui-monospace,Consolas,monospace}
+pre{background:var(--code-bg);padding:16px;border-radius:8px;overflow-x:auto;border:1px solid var(--line)}
+pre code{background:none;padding:0;font-size:13.5px}
+blockquote{margin:20px 0;padding:12px 18px;border-left:3px solid var(--acc);background:#fbf7ef;color:var(--mut)}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:#f0e9dc;font-weight:600}
+a{color:var(--acc)}
+hr{border:0;border-top:1px solid var(--line);margin:36px 0}
+.top{margin-bottom:28px;font:13px ui-monospace,Consolas,monospace}
+.top a{text-decoration:none}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--mut);font-size:13.5px}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><a href="./">← 依赖体检 DepHealth</a></div>
+<article>
+<h1>依赖里出现 deprecated 警告，到底要不要管？48 个包的实测答案</h1>
+<blockquote>全部判断基于 <strong>2026-11-24</strong> 从 npm registry 公开 API 拉取的实时数据，数据与脚本一起开源，可自行复现。 <code>npm install</code> 时看到 <code>deprecated</code> 警告，这篇是给你判断「要不要动手」的。</blockquote>
+<h2>先给结论</h2>
+<p><strong>大部分情况不用管，但有三类必须处理。</strong></p>
+<p>我按「装了会不会有事」把这 48 个包分成三档，并给出每一档的具体动作。</p>
+<p>判断依据不是感觉，是三个可查的事实：包在不在维护、是不是原生模块、是直接依赖还是被拖进来的。</p>
+<h2>第一档：不用管（占了大多数）</h2>
+<p><strong>特征：纯 JS、功能已被平台内置取代、且你几乎不会是直接依赖它。</strong></p>
+<p>这类包每周被下载上亿次，绝大多数来自 <code>glob</code>、<code>request</code>、<code>jsdom</code> 这些老包的下游。</p>
+<p>你项目里出现它们，通常是因为<strong>某个依赖的依赖</strong>用了它们。</p>
+<p>典型：</p>
+<ul>
+<li><code>os-tmpdir</code> — 官方说明「已不需要，直接用 <code>os.tmpdir()</code>」</li>
+<li><code>domexception</code> — 「用平台原生 <code>DOMException</code>」</li>
+<li><code>abab</code> — 「用原生 <code>atob()</code> / <code>btoa()</code>」</li>
+<li><code>querystring</code> — 「Legacy API，新代码用 <code>URLSearchParams</code>」</li>
+</ul>
+<p><strong>动作：什么都不做。</strong> 不要为了消掉警告去手动装替代品或改 lockfile。</p>
+<p>为什么：这类包被上游依赖锁定，你改自己的 <code>package.json</code> 不会让它消失；</p>
+<p>强行删还会破坏依赖树。等上游升级即可。</p>
+<h2>第二档：值得排期处理</h2>
+<p><strong>特征：你是直接依赖，或者它承担了实际功能。</strong></p>
+<p>检查你是不是直接依赖：</p>
+<pre><code class="lang-bash">npm ls &lt;包名&gt;</code></pre>
+<p>输出里如果出现在你的 <code>dependencies</code> 第一层，就是直接依赖。</p>
+<p>典型：</p>
+<ul>
+<li><code>moment</code> — 曾是最大的日期库之一。它在 npm 上从未被标记 deprecated，但已经<strong>长期没有新版本</strong></li>
+</ul>
+<p>  （项目维护者已转向 <code>luxon</code> 等后继方案）。体积大、可变对象、时区处理有坑。</p>
+<p>  新项目应换 <code>date-fns</code> 或 <code>dayjs</code>；老项目不必紧急迁移，但要意识到它不再修 bug。</p>
+<p>  *（注意：<code>moment</code> 不在本文的 48 包数据集内——数据集候选池里没有它。此处是常识性说明，</p>
+<p>  具体停更月数以 npm 页面为准，本文不提供该数字。）*</p>
+<ul>
+<li><code>request</code> — 已弃用多年。仍在用的项目应排期换 <code>undici</code> / <code>node-fetch</code> / 原生 <code>fetch</code>。</li>
+<li><code>tslint</code> — 已废弃，换 <code>eslint</code>。</li>
+</ul>
+<p><strong>动作：排进技术债，不要马上改。</strong> 这类替换会牵动调用点，属于有计划的迁移，不是消警告。</p>
+<h2>第三档：必须尽快处理（真正会出事）</h2>
+<p><strong>特征：原生模块（需要编译），或内存/安全有明确问题。</strong></p>
+<p>这一类是唯一「看到就该动手」的：</p>
+<ul>
+<li><code>inflight</code> — 官方原文：<strong>"This module is not supported, and leaks memory. Do not use it."</strong></li>
+</ul>
+<p>  它是 <code>glob</code> 的依赖，node 生态里很多工具链会带进来。内存泄漏在生产长跑进程里是真问题。</p>
+<ul>
+<li><code>node-sass</code> — 原生编译，与 Node 版本强绑定。换 <code>sass</code>（纯 JS，Dart Sass）。</li>
+<li><code>node-pre-gyp</code> / <code>node-gyp</code> 相关 — 原生编译链，CI 里最常见的构建失败来源。</li>
+<li><code>fibers</code> — 与新版 Node 不兼容，早已停止维护。</li>
+<li><code>phantomjs-prebuilt</code> — PhantomJS 项目已终止，二进制下载源经常挂。</li>
+</ul>
+<p><strong>动作：这些值得开 issue 排期。</strong> 尤其 <code>node-sass</code> 和 <code>fibers</code>，它们会让你的 CI 在某次 Node 升级后突然红掉。</p>
+<h2>怎么快速自查（30 秒）</h2>
+<p>不要一个个查。用一条命令列出你项目里所有已弃用的直接依赖：</p>
+<pre><code class="lang-bash">npm ls --all 2&gt;/dev/null | grep -i deprecat</code></pre>
+<p>或者只看顶层：</p>
+<pre><code class="lang-bash">npm outdated</code></pre>
+<p>如果你想要一份带「弃用标记 + 停更月数 + 周下载量」的清单，</p>
+<p>可以直接把 <code>package.json</code> 粘到浏览器里跑一次体检（数据来自 npm registry / deps.dev / OSV.dev 公开接口，不上传代码）。</p>
+<h2>为什么「周下载 6.92 亿次」这件事重要</h2>
+<p>我实测的 48 个包里，34 个已被 npm 官方标记废弃，</p>
+<p><strong>它们合计每周仍被下载 691,953,410 次</strong>（平均每个每周 1440 万次）。</p>
+<p>这说明：<strong><code>deprecated</code> 标签几乎不影响真实安装量。</strong></p>
+<p>所以你在 <code>npm install</code> 看到它时，不必惊慌——但也不该完全无视，</p>
+<p>因为「大家都不管」不代表「对你没事」，尤其第三档那几个。</p>
+<h2>数据与复现</h2>
+<ul>
+<li>完整名单与逐包数据：<a href="data/risk-index.json"><code>data/risk-index.json</code></a></li>
+<li>生成脚本：<a href="scripts/build-risk-index.js"><code>scripts/build-risk-index.js</code></a>（只调公开端点，无 key、无登录）</li>
+<li>数字一致性校验：<a href="scripts/verify-article.mjs"><code>scripts/verify-article.mjs</code></a></li>
+</ul>
+<pre><code class="lang-bash">git clone https://github.com/elsonshow/dep-health
+cd dep-health
+node scripts/build-risk-index.js
+node scripts/verify-article.mjs</code></pre>
+<h2>一句实话</h2>
+<p><code>npm audit</code> 不会告诉你这些——它只报安全漏洞。</p>
+<p>一个包可以零 CVE、已被作者明确弃用、每周被几千万项目安装，这三点同时成立。</p>
+<p>这类依赖不会出现在任何告警里，但它确实是债。</p>
+<h2>边界</h2>
+<ul>
+<li>下载量是 npm 公开统计，<strong>包含 CI 与镜像</strong>，不等于真实用户数。</li>
+<li>「停更」= 最新版本距今 ≥ 24 个月，是我的阈值，不是 npm 官方定义。</li>
+<li>候选池是我列的 58 个高知名度包，不是全量 npm 扫描；</li>
+</ul>
+<p>  「34 个」是这个池子里的计数，不能外推成「npm 上共有 34 个弃用包」。</p>
+<ul>
+<li>数字是 2026-11-24 的快照，会随时间变。</li>
+</ul>
+</article>
+<footer>数据与脚本开源：<a href="https://github.com/elsonshow/dep-health">github.com/elsonshow/dep-health</a></footer>
+</main>
+</body>
+</html>
