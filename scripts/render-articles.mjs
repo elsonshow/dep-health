@@ -197,6 +197,13 @@ const ARTICLES = [
     title: 'npm 依赖现状实测：34 个「已被官方弃用」的包，每周仍被下载 6.92 亿次',
     desc: '2026-11-24 实测 npm registry：48 个高知名度包中 34 个已被官方标记弃用，合计周下载 6.92 亿次。全部数字可复现。',
     canonical: 'https://elsonshow.github.io/dep-health/npm-deprecated-2026-11.html'
+  },
+  {
+    src: 'UPGRADE-RISK.md',
+    out: 'upgrade-risk.html',
+    title: '升级风险评估：落后几个大版本 ≠ 该不该升级',
+    desc: '同样是「落后 2 个大版本」，typescript 已发布 139 天可以升，vitest 才发布 6 天不该碰。用发布时间维度判断升级风险，附真实 19 依赖项目的实测输出与可复现脚本。',
+    canonical: 'https://elsonshow.github.io/dep-health/upgrade-risk.html'
   }
 ]
 
