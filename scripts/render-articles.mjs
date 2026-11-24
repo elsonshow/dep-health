@@ -204,6 +204,13 @@ const ARTICLES = [
     title: '升级风险评估：落后几个大版本 ≠ 该不该升级',
     desc: '同样是「落后 2 个大版本」，typescript 已发布 139 天可以升，vitest 才发布 6 天不该碰。用发布时间维度判断升级风险，附真实 19 依赖项目的实测输出与可复现脚本。',
     canonical: 'https://elsonshow.github.io/dep-health/upgrade-risk.html'
+  },
+  {
+    src: 'NO-LOCKFILE-AUDIT.md',
+    out: 'no-lockfile-audit.html',
+    title: '还没装依赖的时候，怎么查依赖的漏洞？',
+    desc: 'npm audit 在缺 lockfile 时会直接报 ENOLOCK 拒绝工作。实测对比：同一份 package.json，npm audit 一行不给，只读清单的工具能列出 32 个已知漏洞。附代价说明与门禁取舍。',
+    canonical: 'https://elsonshow.github.io/dep-health/no-lockfile-audit.html'
   }
 ]
 
