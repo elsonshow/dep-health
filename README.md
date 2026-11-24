@@ -43,6 +43,21 @@
 
 ![截图](docs/screenshot.png)
 
+## 实测与指南
+
+不是营销页，是拿 npm 公开接口跑出来的数据和分析，脚本可复现：
+
+- **[依赖里出现 deprecated 警告，到底要不要管？48 个包的实测答案](https://elsonshow.github.io/dep-health/deprecated-warning.html)**
+  —— 把弃用包分成「不用管 / 值得排期 / 必须尽快处理」三档，附 30 秒自查命令。
+- **[npm 依赖现状实测：34 个已被官方弃用的包，每周仍被下载 6.92 亿次](https://elsonshow.github.io/dep-health/npm-deprecated-2026-11.html)**
+  —— 2026-11-24 的 registry 快照，含完整名单与逐包下载量。
+- **[弃用包速查表](https://elsonshow.github.io/dep-health/risk-index.html)**
+  —— 按周下载量排序的静态清单，可直接对照自己项目。
+
+数据与生成脚本都在仓库里：[`data/risk-index.json`](data/risk-index.json)、
+[`scripts/build-risk-index.js`](scripts/build-risk-index.js)、
+[`scripts/verify-article.mjs`](scripts/verify-article.mjs)。
+
 ## 数据来源（全部是公开官方接口）
 
 | 数据 | 来源 | 用途 |
