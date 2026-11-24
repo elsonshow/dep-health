@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>npm 依赖现状实测：34 个「已被官方弃用」的包，每周仍被下载 6.92 亿次</title>
+<meta name="description" content="2026-11-24 实测 npm registry：48 个高知名度包中 34 个已被官方标记弃用，合计周下载 6.92 亿次。全部数字可复现。">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://elsonshow.github.io/dep-health/npm-deprecated-2026-11.html">
+<style>
+:root{--bg:#f7f2e8;--fg:#2b2824;--mut:#6b6157;--line:#e8ddcd;--acc:#a65b38;--code-bg:#f0e9dc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.85 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+main{max-width:760px;margin:0 auto;padding:48px 22px 96px}
+h1{font-size:30px;line-height:1.35;margin:0 0 20px;letter-spacing:-.01em}
+h2{font-size:22px;margin:40px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h3{font-size:18px;margin:28px 0 10px}
+p{margin:14px 0}
+ul,ol{margin:14px 0;padding-left:24px}
+li{margin:7px 0}
+code{background:var(--code-bg);padding:2px 6px;border-radius:4px;font:14px/1.6 ui-monospace,Consolas,monospace}
+pre{background:var(--code-bg);padding:16px;border-radius:8px;overflow-x:auto;border:1px solid var(--line)}
+pre code{background:none;padding:0;font-size:13.5px}
+blockquote{margin:20px 0;padding:12px 18px;border-left:3px solid var(--acc);background:#fbf7ef;color:var(--mut)}
+table{border-collapse:collapse;width:100%;margin:20px 0;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:#f0e9dc;font-weight:600}
+a{color:var(--acc)}
+hr{border:0;border-top:1px solid var(--line);margin:36px 0}
+.top{margin-bottom:28px;font:13px ui-monospace,Consolas,monospace}
+.top a{text-decoration:none}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--mut);font-size:13.5px}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><a href="./">← 依赖体检 DepHealth</a></div>
+<article>
+<h1>npm 依赖现状实测：34 个「已被官方弃用」的包，每周仍被下载 6.92 亿次</h1>
+<blockquote>数据全部来自 npm registry 公开 API，<strong>2026-11-24 实测</strong>，脚本可复现，无人工判断。 原始数据：<a href="data/risk-index.json"><code>data/risk-index.json</code></a> ｜ 生成脚本：<a href="scripts/build-risk-index.js"><code>scripts/build-risk-index.js</code></a> 复现：<code>node scripts/build-risk-index.js</code></blockquote>
+<h2>一句话结论</h2>
+<p>我在 58 个跨年代、跨生态位的高知名度包里拉了实时 registry 数据，</p>
+<p>其中 <strong>34 个已被 npm 官方标记为 deprecated</strong>，14 个最新版已停更 ≥ 24 个月。</p>
+<p>这 48 个包<strong>合计每周仍被下载 691,953,410 次</strong>——平均每个每周 1440 万次。</p>
+<p>也就是说：<strong>「已弃用」这个标签，几乎没有改变真实世界的安装量。</strong></p>
+<h2>为什么这件事值得记录</h2>
+<p>大多数团队判断依赖风险的方式是「跑一次 <code>npm audit</code>」。</p>
+<p>但 <code>npm audit</code> 只报<strong>安全漏洞</strong>，不报<strong>弃用</strong>、也不报<strong>停更</strong>。</p>
+<p>一个包可以同时是：</p>
+<ul>
+<li>完全没有任何 CVE（所以 <code>audit</code> 是干净的）</li>
+<li>已被作者明确写下「不要再用我」</li>
+<li>每周被几千万个项目安装</li>
+</ul>
+<p>这一类依赖不会出现在任何漏洞告警里，却是真实的技术债。</p>
+<h2>前 10 名（按周下载量）</h2>
+<table><tr><th>包</th><th>周下载量</th><th>状态</th><th>npm 官方原文（节选）</th></tr><tr><td><code>punycode</code></td><td>307,228,493</td><td>停更 37 个月</td><td>—（无 deprecated 标记，但最新版停在 2023-10）</td></tr><tr><td><code>inflight</code></td><td>131,262,549</td><td><strong>已弃用</strong></td><td>"This module is not supported, and leaks memory. Do not use it."</td></tr><tr><td><code>url</code></td><td>30,881,724</td><td>停更 28 个月</td><td>—</td></tr><tr><td><code>domexception</code></td><td>28,172,451</td><td><strong>已弃用</strong></td><td>"Use your platform's native DOMException instead"</td></tr><tr><td><code>os-tmpdir</code></td><td>27,354,039</td><td><strong>已弃用</strong></td><td>"This is not needed anymore. <code>require('os').tmpdir()</code>…"</td></tr><tr><td><code>abab</code></td><td>27,111,881</td><td><strong>已弃用</strong></td><td>"Use your platform's native atob() and btoa() methods instead"</td></tr><tr><td><code>querystring</code></td><td>18,145,080</td><td><strong>已弃用</strong></td><td>"The querystring API is considered Legacy."</td></tr><tr><td><code>request</code></td><td>13,613,888</td><td><strong>已弃用</strong></td><td>"request has been deprecated"</td></tr><tr><td><code>har-validator</code></td><td>13,613,029</td><td><strong>已弃用</strong></td><td>—</td></tr><tr><td><code>source-map-resolve</code></td><td>12,923,514</td><td><strong>已弃用</strong></td><td>—</td></tr></table>
+<h2>完整名单（34 个已弃用）</h2>
+<p><code>inflight</code>, <code>domexception</code>, <code>os-tmpdir</code>, <code>abab</code>, <code>querystring</code>, <code>request</code>,</p>
+<p><code>har-validator</code>, <code>source-map-resolve</code>, <code>os-homedir</code>, <code>stable</code>, <code>source-map-url</code>,</p>
+<p><code>resolve-url</code>, <code>urix</code>, <code>w3c-hr-time</code>, <code>subscriptions-transport-ws</code>,</p>
+<p><code>@babel/polyfill</code>, <code>left-pad</code>, <code>tslint</code>, <code>node-uuid</code>, <code>gulp-util</code>,</p>
+<p><code>apollo-server-core</code>, <code>coffee-script</code>, <code>node-sass</code>, <code>babel-preset-es2015</code>,</p>
+<p><code>nomnom</code>, <code>angular</code>, <code>jade</code>, <code>phantomjs-prebuilt</code>, <code>q</code>, <code>babel-eslint</code>,</p>
+<p><code>eslint-loader</code>, <code>friendly-errors-webpack-plugin</code>, <code>mkdirp-promise</code>,</p>
+<p><code>node-pre-gyp</code></p>
+<p>停更但未标记弃用的 14 个：<code>punycode</code>, <code>url</code>, <code>worker-rpc</code>, <code>bower</code>,</p>
+<p><code>vue-resource</code>, <code>bluebird</code>, <code>when</code>, <code>promise</code>, <code>es6-promise</code>, <code>babel-core</code>,</p>
+<p><code>uglifyjs-webpack-plugin</code>, <code>optimize-css-assets-webpack-plugin</code>, <code>ncp</code>, <code>fibers</code></p>
+<h2>怎么用这份数据</h2>
+<ol>
+<li><strong>不要</strong>因为一个包在名单里就立刻升级。<code>inflight</code> 是 <code>glob</code> 的传递依赖，</li>
+</ol>
+<p>   直接删会炸整棵树。</p>
+<ol>
+<li>先看它是<strong>直接依赖</strong>还是<strong>传递依赖</strong>：<code>npm ls &amp;lt;包名&amp;gt;</code>。</li>
+<li>传递依赖的正确做法是升级<strong>引入它的那个直接依赖</strong>，不是硬改 lockfile。</li>
+<li><code>punycode</code> 和 <code>url</code> 属于 Node 内置模块的 polyfill，通常由某个上游包自动注入，</li>
+</ol>
+<p>   升级上游即可消失。</p>
+<h2>方法边界（诚实说明）</h2>
+<ul>
+<li>下载量来自 <code>api.npmjs.org/downloads/point/last-week/&amp;lt;包&amp;gt;</code>，是 npm 的公开统计，</li>
+</ul>
+<p>  <strong>包含 CI 与镜像</strong>，不等于真实用户数。</p>
+<ul>
+<li>「停更」定义为最新版本发布时间距今 ≥ 24 个月，这是我的阈值，不是 npm 的官方定义。</li>
+<li>候选池是我手工列的 58 个高知名度包，<strong>不是</strong>全量 npm 扫描；</li>
+</ul>
+<p>  因此「34 个」是这个池子里的计数，不能外推为「npm 上共有 34 个弃用包」。</p>
+<ul>
+<li>数据有时效性，上面的数字是 2026-11-24 的快照。</li>
+</ul>
+<h2>复现</h2>
+<pre><code class="lang-bash">git clone https://github.com/elsonshow/dep-health
+cd dep-health
+node scripts/build-risk-index.js     # 重新拉实时数据并重写 risk-index.html</code></pre>
+<p>脚本对每个包调用两个公开端点（<code>registry.npmjs.org/&amp;lt;包&amp;gt;</code> 与</p>
+<p><code>api.npmjs.org/downloads/point/last-week/&amp;lt;包&amp;gt;</code>），不登录、不带 key、不缓存过期数据。</p>
+</article>
+<footer>数据与脚本开源：<a href="https://github.com/elsonshow/dep-health">github.com/elsonshow/dep-health</a></footer>
+</main>
+</body>
+</html>
