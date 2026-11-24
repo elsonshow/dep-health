@@ -1,8 +1,8 @@
 {
   "meta": {
-    "date": "2026-11-21",
+    "date": "2026-11-24",
     "month": "2026 年 11 月",
-    "collectedAt": "2026-11-21 16:24 UTC",
+    "collectedAt": "2026-11-24 08:56 UTC",
     "candidates": 58,
     "deprecatedCount": 34
   },
@@ -15,7 +15,7 @@
       "deprecated": "",
       "publishedAt": "2023-10-30T18:28:32Z",
       "license": "MIT",
-      "weeklyDownloads": 306824537,
+      "weeklyDownloads": 307228493,
       "repo": "git+https://github.com/mathiasbynens/punycode.js.git",
       "stale": true,
       "staleMonths": 37
@@ -27,22 +27,10 @@
       "deprecated": "This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.",
       "publishedAt": "2016-10-13T03:53:29Z",
       "license": "ISC",
-      "weeklyDownloads": 131255182,
+      "weeklyDownloads": 131262549,
       "repo": "git+https://github.com/npm/inflight.git",
       "stale": true,
       "staleMonths": 121
-    },
-    {
-      "name": "bluebird",
-      "ok": true,
-      "version": "3.7.2",
-      "deprecated": "",
-      "publishedAt": "2019-11-28T22:55:40Z",
-      "license": "MIT",
-      "weeklyDownloads": 85578173,
-      "repo": "git://github.com/petkaantonov/bluebird.git",
-      "stale": true,
-      "staleMonths": 84
     },
     {
       "name": "url",
@@ -51,7 +39,7 @@
       "deprecated": "",
       "publishedAt": "2024-07-26T19:54:21Z",
       "license": "MIT",
-      "weeklyDownloads": 30471216,
+      "weeklyDownloads": 30881724,
       "repo": "git+https://github.com/defunctzombie/node-url.git",
       "stale": true,
       "staleMonths": 28
@@ -63,10 +51,10 @@
       "deprecated": "Use your platform's native DOMException instead",
       "publishedAt": "2021-10-06T16:44:49Z",
       "license": "MIT",
-      "weeklyDownloads": 27863370,
+      "weeklyDownloads": 28172451,
       "repo": "git+https://github.com/jsdom/domexception.git",
       "stale": true,
-      "staleMonths": 61
+      "staleMonths": 62
     },
     {
       "name": "os-tmpdir",
@@ -75,10 +63,10 @@
       "deprecated": "This is not needed anymore. `require('os').tmpdir()` in Node.js 4 and up is good.",
       "publishedAt": "2018-11-08T11:14:15Z",
       "license": "MIT",
-      "weeklyDownloads": 27141030,
+      "weeklyDownloads": 27354039,
       "repo": "git+https://github.com/sindresorhus/os-tmpdir.git",
       "stale": true,
-      "staleMonths": 96
+      "staleMonths": 97
     },
     {
       "name": "abab",
@@ -87,7 +75,7 @@
       "deprecated": "Use your platform's native atob() and btoa() methods instead",
       "publishedAt": "2022-04-17T03:36:42Z",
       "license": "BSD-3-Clause",
-      "weeklyDownloads": 26787590,
+      "weeklyDownloads": 27111881,
       "repo": "git+https://github.com/jsdom/abab.git",
       "stale": true,
       "staleMonths": 55
@@ -99,22 +87,10 @@
       "deprecated": "The querystring API is considered Legacy. new code should use the URLSearchParams API instead.",
       "publishedAt": "2021-02-15T14:38:16Z",
       "license": "MIT",
-      "weeklyDownloads": 17824394,
+      "weeklyDownloads": 18145080,
       "repo": "git://github.com/Gozala/querystring.git",
       "stale": true,
       "staleMonths": 69
-    },
-    {
-      "name": "har-validator",
-      "ok": true,
-      "version": "5.1.5",
-      "deprecated": "this library is no longer supported",
-      "publishedAt": "2020-07-30T04:42:33Z",
-      "license": "MIT",
-      "weeklyDownloads": 13375946,
-      "repo": "git+https://github.com/ahmadnassri/node-har-validator.git",
-      "stale": true,
-      "staleMonths": 76
     },
     {
       "name": "request",
@@ -123,10 +99,22 @@
       "deprecated": "request has been deprecated, see https://github.com/request/request/issues/3142",
       "publishedAt": "2020-02-11T16:35:36Z",
       "license": "Apache-2.0",
-      "weeklyDownloads": 13352115,
+      "weeklyDownloads": 13613888,
       "repo": "git+https://github.com/request/request.git",
       "stale": true,
       "staleMonths": 81
+    },
+    {
+      "name": "har-validator",
+      "ok": true,
+      "version": "5.1.5",
+      "deprecated": "this library is no longer supported",
+      "publishedAt": "2020-07-30T04:42:33Z",
+      "license": "MIT",
+      "weeklyDownloads": 13613029,
+      "repo": "git+https://github.com/ahmadnassri/node-har-validator.git",
+      "stale": true,
+      "staleMonths": 76
     },
     {
       "name": "source-map-resolve",
@@ -135,7 +123,7 @@
       "deprecated": "See https://github.com/lydell/source-map-resolve#deprecated",
       "publishedAt": "2020-03-21T22:24:04Z",
       "license": "MIT",
-      "weeklyDownloads": 12701481,
+      "weeklyDownloads": 12923514,
       "repo": "git+https://github.com/lydell/source-map-resolve.git",
       "stale": true,
       "staleMonths": 80
@@ -147,10 +135,10 @@
       "deprecated": "This is not needed anymore. Use `require('os').homedir()` instead.",
       "publishedAt": "2018-11-08T11:18:38Z",
       "license": "MIT",
-      "weeklyDownloads": 11824699,
+      "weeklyDownloads": 12030990,
       "repo": "git+https://github.com/sindresorhus/os-homedir.git",
       "stale": true,
-      "staleMonths": 96
+      "staleMonths": 97
     },
     {
       "name": "stable",
@@ -159,7 +147,7 @@
       "deprecated": "Modern JS already guarantees Array#sort() is a stable sort, so this library is deprecated. See the compatibility table on MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#browser_compatibility",
       "publishedAt": "2018-04-25T14:41:39Z",
       "license": "MIT",
-      "weeklyDownloads": 10846693,
+      "weeklyDownloads": 10930176,
       "repo": "git+https://github.com/Two-Screen/stable.git",
       "stale": true,
       "staleMonths": 103
@@ -171,7 +159,7 @@
       "deprecated": "See https://github.com/lydell/source-map-url#deprecated",
       "publishedAt": "2021-02-01T20:14:54Z",
       "license": "MIT",
-      "weeklyDownloads": 10665498,
+      "weeklyDownloads": 10863184,
       "repo": "git+https://github.com/lydell/source-map-url.git",
       "stale": true,
       "staleMonths": 70
@@ -183,7 +171,7 @@
       "deprecated": "https://github.com/lydell/resolve-url#deprecated",
       "publishedAt": "2014-02-25T18:48:50Z",
       "license": "MIT",
-      "weeklyDownloads": 10295861,
+      "weeklyDownloads": 10478419,
       "repo": "git://github.com/lydell/resolve-url",
       "stale": true,
       "staleMonths": 153
@@ -195,7 +183,7 @@
       "deprecated": "Please see https://github.com/lydell/urix#deprecated",
       "publishedAt": "2014-03-01T21:02:32Z",
       "license": "MIT",
-      "weeklyDownloads": 10212454,
+      "weeklyDownloads": 10394121,
       "repo": "git://github.com/lydell/urix",
       "stale": true,
       "staleMonths": 153
@@ -207,7 +195,7 @@
       "deprecated": "Use your platform's native performance.now() and performance.timeOrigin.",
       "publishedAt": "2020-03-06T00:45:09Z",
       "license": "MIT",
-      "weeklyDownloads": 8892485,
+      "weeklyDownloads": 9053437,
       "repo": "https://github.com/jsdom/w3c-hr-time",
       "stale": true,
       "staleMonths": 81
@@ -219,7 +207,7 @@
       "deprecated": "The `subscriptions-transport-ws` package is no longer maintained. We recommend you use `graphql-ws` instead. For help migrating Apollo software to `graphql-ws`, see https://www.apollographql.com/docs/apollo-server/data/subscriptions/#switching-from-subscriptions-transport-ws    For general help using `graphql-ws`, see https://github.com/enisdenjo/graphql-ws/blob/master/README.md",
       "publishedAt": "2021-11-02T22:48:18Z",
       "license": "MIT",
-      "weeklyDownloads": 2911137,
+      "weeklyDownloads": 2940847,
       "repo": "git+https://github.com/apollostack/subscriptions-transport-ws.git",
       "stale": true,
       "staleMonths": 61
@@ -231,7 +219,7 @@
       "deprecated": "🚨 This package has been deprecated in favor of separate inclusion of a polyfill and regenerator-runtime (when needed). See the @babel/polyfill docs (https://babeljs.io/docs/en/babel-polyfill) for more information.",
       "publishedAt": "2020-10-15T22:40:35Z",
       "license": "MIT",
-      "weeklyDownloads": 2164208,
+      "weeklyDownloads": 2181711,
       "repo": "https://github.com/babel/babel.git",
       "stale": true,
       "staleMonths": 73
@@ -243,10 +231,10 @@
       "deprecated": "use String.prototype.padStart()",
       "publishedAt": "2018-04-09T01:10:45Z",
       "license": "WTFPL",
-      "weeklyDownloads": 2015078,
+      "weeklyDownloads": 2006724,
       "repo": "git+ssh://git@github.com/stevemao/left-pad.git",
       "stale": true,
-      "staleMonths": 103
+      "staleMonths": 104
     },
     {
       "name": "tslint",
@@ -255,7 +243,7 @@
       "deprecated": "TSLint has been deprecated in favor of ESLint. Please see https://github.com/palantir/tslint/issues/4534 for more information.",
       "publishedAt": "2020-07-31T17:25:07Z",
       "license": "Apache-2.0",
-      "weeklyDownloads": 1755999,
+      "weeklyDownloads": 1811137,
       "repo": "https://github.com/palantir/tslint.git",
       "stale": true,
       "staleMonths": 76
@@ -267,7 +255,7 @@
       "deprecated": "",
       "publishedAt": "2019-05-19T22:09:10Z",
       "license": "MIT",
-      "weeklyDownloads": 1207333,
+      "weeklyDownloads": 1233990,
       "repo": "git+https://github.com/DirtyHairy/worker-rpc.git",
       "stale": true,
       "staleMonths": 90
@@ -279,7 +267,7 @@
       "deprecated": "Use uuid module instead",
       "publishedAt": "2017-03-22T00:30:38Z",
       "license": "",
-      "weeklyDownloads": 938793,
+      "weeklyDownloads": 977995,
       "repo": "git+https://github.com/broofa/node-uuid.git",
       "stale": true,
       "staleMonths": 116
@@ -291,7 +279,7 @@
       "deprecated": "gulp-util is deprecated - replace it, following the guidelines at https://medium.com/gulpjs/gulp-util-ca3b1f9f9ac5",
       "publishedAt": "2016-12-26T23:11:10Z",
       "license": "MIT",
-      "weeklyDownloads": 915466,
+      "weeklyDownloads": 957448,
       "repo": "git+https://github.com/gulpjs/gulp-util.git",
       "stale": true,
       "staleMonths": 119
@@ -303,7 +291,7 @@
       "deprecated": "The `apollo-server-core` package is part of Apollo Server v2 and v3, which are now end-of-life (as of October 22nd 2023 and October 22nd 2024, respectively). This package's functionality is now found in the `@apollo/server` package. See https://www.apollographql.com/docs/apollo-server/previous-versions/ for more details.",
       "publishedAt": "2023-11-14T00:17:04Z",
       "license": "MIT",
-      "weeklyDownloads": 894441,
+      "weeklyDownloads": 912794,
       "repo": "git+https://github.com/apollographql/apollo-server.git",
       "stale": true,
       "staleMonths": 36
@@ -315,7 +303,7 @@
       "deprecated": "CoffeeScript on NPM has moved to \"coffeescript\" (no hyphen)",
       "publishedAt": "2017-07-17T06:55:16Z",
       "license": "MIT",
-      "weeklyDownloads": 814896,
+      "weeklyDownloads": 825282,
       "repo": "git://github.com/jashkenas/coffeescript.git",
       "stale": true,
       "staleMonths": 112
@@ -327,7 +315,7 @@
       "deprecated": "Node Sass is no longer supported. Please use `sass` or `sass-embedded` instead.",
       "publishedAt": "2023-05-20T06:03:42Z",
       "license": "MIT",
-      "weeklyDownloads": 752544,
+      "weeklyDownloads": 788528,
       "repo": "git+https://github.com/sass/node-sass.git",
       "stale": true,
       "staleMonths": 42
@@ -339,22 +327,10 @@
       "deprecated": "🙌  Thanks for using Babel: we recommend using babel-preset-env now: please read https://babeljs.io/env to update!",
       "publishedAt": "2017-04-07T15:19:43Z",
       "license": "MIT",
-      "weeklyDownloads": 677886,
+      "weeklyDownloads": 717324,
       "repo": "https://github.com/babel/babel/tree/master/packages/babel-preset-es2015",
       "stale": true,
-      "staleMonths": 115
-    },
-    {
-      "name": "angular",
-      "ok": true,
-      "version": "1.8.3",
-      "deprecated": "For the actively supported Angular, see https://www.npmjs.com/package/@angular/core. AngularJS support has officially ended. For extended AngularJS support options, see https://goo.gle/angularjs-path-forward.",
-      "publishedAt": "2022-04-07T22:12:36Z",
-      "license": "MIT",
-      "weeklyDownloads": 638837,
-      "repo": "git+https://github.com/angular/angular.js.git",
-      "stale": true,
-      "staleMonths": 55
+      "staleMonths": 116
     },
     {
       "name": "nomnom",
@@ -363,10 +339,22 @@
       "deprecated": "Package no longer supported. Contact support@npmjs.com for more info.",
       "publishedAt": "2014-11-07T18:17:52Z",
       "license": "",
-      "weeklyDownloads": 621582,
+      "weeklyDownloads": 648332,
       "repo": "http://github.com/harthur/nomnom.git",
       "stale": true,
-      "staleMonths": 144
+      "staleMonths": 145
+    },
+    {
+      "name": "angular",
+      "ok": true,
+      "version": "1.8.3",
+      "deprecated": "For the actively supported Angular, see https://www.npmjs.com/package/@angular/core. AngularJS support has officially ended. For extended AngularJS support options, see https://goo.gle/angularjs-path-forward.",
+      "publishedAt": "2022-04-07T22:12:36Z",
+      "license": "MIT",
+      "weeklyDownloads": 644358,
+      "repo": "git+https://github.com/angular/angular.js.git",
+      "stale": true,
+      "staleMonths": 56
     },
     {
       "name": "bower",
@@ -375,7 +363,7 @@
       "deprecated": "",
       "publishedAt": "2022-03-14T15:41:33Z",
       "license": "MIT",
-      "weeklyDownloads": 432192,
+      "weeklyDownloads": 406665,
       "repo": "bower/bower",
       "stale": true,
       "staleMonths": 56
@@ -387,7 +375,7 @@
       "deprecated": "Jade has been renamed to pug, please install the latest version of pug instead of jade",
       "publishedAt": "2015-06-12T05:13:07Z",
       "license": "MIT",
-      "weeklyDownloads": 397384,
+      "weeklyDownloads": 404977,
       "repo": "git://github.com/jadejs/jade.git",
       "stale": true,
       "staleMonths": 137
@@ -399,7 +387,7 @@
       "deprecated": "this package is now deprecated",
       "publishedAt": "2017-11-02T20:24:23Z",
       "license": "Apache-2.0",
-      "weeklyDownloads": 351654,
+      "weeklyDownloads": 365170,
       "repo": "git://github.com/Medium/phantomjs.git",
       "stale": true,
       "staleMonths": 109
@@ -411,10 +399,22 @@
       "deprecated": "",
       "publishedAt": "2021-06-14T12:04:16Z",
       "license": "MIT",
-      "weeklyDownloads": 71231,
+      "weeklyDownloads": 73153,
       "repo": "git+https://github.com/pagekit/vue-resource.git",
       "stale": true,
       "staleMonths": 65
+    },
+    {
+      "name": "bluebird",
+      "ok": true,
+      "version": "3.7.2",
+      "deprecated": "",
+      "publishedAt": "2019-11-28T22:55:40Z",
+      "license": "MIT",
+      "weeklyDownloads": null,
+      "repo": "git://github.com/petkaantonov/bluebird.git",
+      "stale": true,
+      "staleMonths": 84
     },
     {
       "name": "q",
@@ -582,7 +582,7 @@
       "weeklyDownloads": null,
       "repo": "git://github.com/mapbox/node-pre-gyp.git",
       "stale": true,
-      "staleMonths": 71
+      "staleMonths": 72
     }
   ]
 }
