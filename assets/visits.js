@@ -1,60 +1,47 @@
 // 站点访客计数（免注册）。
 //
-// 为什么需要它：GitHub 的 traffic API 只统计**仓库页面**，不含 GitHub Pages 站点。
-// 两轮以来我看到的 "7 views / 2 uniques" 全部是仓库页，站点访客一直是不可知的。
-// 这直接导致「没人来」和「有人来了但不买」无法区分。
+// 严格说这不是"访客数"而是"页面被加载次数"，但它是唯一在本机约束下可测的数：
+//   - GitHub traffic API 只统计**仓库页面**，不含 GitHub Pages 站点（已实测）
+//   - 无 Cloudflare / GA token，注册账号是人工门禁
 //
-// 用 abacus.jasoncameron.dev：匿名命名空间、无需注册、无需 key、CORS 为 *，
-// 可浏览器直接调用。实测 /hit 会 +1，/get 只读不增加。
+// 主计数用 hits.sh：加载一张 SVG 即 +1，不需要 JS 执行，no-store 不缓存。
+// 次计数用 abacus：偶发 500，所以只当交叉参考，不作为结论依据。
 //
-// 隐私：只上报一个每次加载的 +1，不收集 IP、UA、referrer 或任何标识。
-// 失败必须静默：统计坏掉不能影响用户使用工具。
+// 隐私：不上报 IP/UA/referrer，不设 cookie，不收集任何标识。
 (function () {
   "use strict";
 
-  var NAMESPACE = "elsonshow-dephealth";
+  var IMG_BASE = "https://hits.sh/github.com/elsonshow/dep-health-elsonshow";
+  var ABACUS = "https://abacus.jasoncameron.dev";
+  var NS = "elsonshow-dephealth";
   var COUNTER = "pages-visits";
-  var BASE = "https://abacus.jasoncameron.dev";
-
-  function withTimeout(promise, ms) {
-    return new Promise(function (resolve) {
-      var done = false;
-      var t = setTimeout(function () {
-        if (!done) { done = true; resolve(null); }
-      }, ms);
-      promise.then(
-        function (v) { if (!done) { done = true; clearTimeout(t); resolve(v); } },
-        function () { if (!done) { done = true; clearTimeout(t); resolve(null); } }
-      );
-    });
-  }
-
-  function hit() {
-    if (typeof fetch !== "function") return Promise.resolve(null);
-    return withTimeout(
-      fetch(BASE + "/hit/" + NAMESPACE + "/" + COUNTER, {
-        method: "GET",
-        mode: "cors",
-        cache: "no-store",
-        credentials: "omit",
-        referrerPolicy: "no-referrer"
-      }).then(function (r) { return r.ok ? r.json() : null; }),
-      4000
-    );
-  }
-
-  function show(root, value) {
-    if (!root || typeof value !== "number" || !isFinite(value)) return;
-    root.textContent = value.toLocaleString("zh-CN");
-    root.setAttribute("data-visits", String(value));
-  }
 
   function mount() {
-    var el = document.querySelector("[data-site-visits]");
-    if (!el) return;
-    hit().then(function (data) {
-      if (data && typeof data.value === "number") show(el, data.value);
-    });
+    var slot = document.querySelector("[data-site-visits]");
+    if (!slot) return;
+
+    // 主计数：插入 img。每次加载 +1 由 hits.sh 自己记录。
+    var img = document.createElement("img");
+    img.alt = "";
+    img.loading = "lazy";
+    img.referrerPolicy = "no-referrer";
+    img.style.verticalAlign = "middle";
+    img.style.height = "18px";
+    img.src = IMG_BASE + ".svg?t=" + Date.now(); // 绕过任何中间缓存
+    slot.textContent = "";
+    slot.appendChild(img);
+
+    // 次计数：尽力而为，失败静默
+    if (typeof fetch === "function") {
+      try {
+        fetch(ABACUS + "/hit/" + NS + "/" + COUNTER, {
+          mode: "cors",
+          cache: "no-store",
+          credentials: "omit",
+          referrerPolicy: "no-referrer"
+        }).catch(function () {});
+      } catch (e) {}
+    }
   }
 
   if (document.readyState === "loading") {
