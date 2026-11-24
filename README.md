@@ -51,6 +51,8 @@
   —— 把弃用包分成「不用管 / 值得排期 / 必须尽快处理」三档，附 30 秒自查命令。
 - **[npm 依赖现状实测：34 个已被官方弃用的包，每周仍被下载 6.92 亿次](https://elsonshow.github.io/dep-health/npm-deprecated-2026-11.html)**
   —— 2026-11-24 的 registry 快照，含完整名单与逐包下载量。
+- **[升级风险评估：落后几个大版本 ≠ 该不该升级](https://elsonshow.github.io/dep-health/upgrade-risk.html)**
+  —— 同样的「落后」，typescript 已稳定 139 天可以升，vitest 才发布 6 天不该碰。按发布时间判断风险。
 - **[弃用包速查表](https://elsonshow.github.io/dep-health/risk-index.html)**
   —— 按周下载量排序的静态清单，可直接对照自己项目。
 
