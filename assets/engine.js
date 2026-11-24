@@ -380,13 +380,34 @@
     }
 
     score = Math.max(0, Math.min(100, Math.round(score)));
+
+    // 状态分两层，不能混为一谈：
+    //
+    //   securityStatus —— 只由「真实安全威胁」决定：已弃用、或存在 CRITICAL/HIGH 级漏洞。
+    //                     这是 fail-on 应当依据的东西，也是唯一会阻断合并的信号。
+    //   status         —— 综合健康度（含版本落后等维护性问题），用于展示与排序。
+    //
+    // 以前只有 status，且它完全由分数决定，于是「落后 3 个大版本」这种维护性问题
+    // 会把分数压到 40 以下、被判成 critical，进而让 fail-on=critical 的 CI 失败。
+    // 那是误报：版本落后不该阻断合并。
+    var hasCriticalVuln = (d.vulns || []).some(function (v) {
+      return severityRank(v.severity) >= 3;
+    });
+    var isDeprecated = !!(d.deprecated && String(d.deprecated).trim());
+    var securityCritical = hasCriticalVuln || isDeprecated;
+
     var status = score >= 85 ? 'healthy' : score >= 65 ? 'watch' : score >= 40 ? 'risk' : 'critical';
+    // 安全等级单独表达，避免被维护性扣分掩盖或夸大
+    var securityStatus = securityCritical
+      ? (hasCriticalVuln ? 'critical' : 'deprecated')
+      : 'ok';
 
     return {
       name: d.name,
       range: d.range,
       bucket: d.bucket,
       status: status,
+      securityStatus: securityStatus,
       score: score,
       lag: lag,
       findings: findings,
@@ -409,15 +430,25 @@
       : null;
     var counts = { critical: 0, risk: 0, watch: 0, healthy: 0, unknown: 0 };
     verdicts.forEach(function (v) { counts[v.status] = (counts[v.status] || 0) + 1; });
-    var critical = verdicts.filter(function (v) {
-      return v.findings.some(function (f) { return f.level === 'critical'; });
+
+    // securityCritical 只计「真实安全威胁」：已弃用或有 CRITICAL/HIGH 漏洞。
+    // 它才是 fail-on 的依据。此前它按 findings 里是否有 critical 来数，
+    // 会把「落后大版本」也算进去，导致 fail-on=critical 误杀正常项目。
+    var securityCritical = verdicts.filter(function (v) {
+      return v.securityStatus === 'critical' || v.securityStatus === 'deprecated';
     }).length;
+    var deprecatedCount = verdicts.filter(function (v) { return v.securityStatus === 'deprecated'; }).length;
+    var vulnCriticalCount = verdicts.filter(function (v) { return v.securityStatus === 'critical'; }).length;
+
     return {
       total: verdicts.length,
       scored: known.length,
       average: avg,
       counts: counts,
-      criticalCount: critical
+      criticalCount: securityCritical,
+      securityCriticalCount: securityCritical,
+      deprecatedCount: deprecatedCount,
+      vulnCriticalCount: vulnCriticalCount
     };
   }
 
