@@ -464,8 +464,18 @@
     lines.push('| 依赖 | 区间 | 当前最新 | 健康分 | 状态 |');
     lines.push('| --- | --- | --- | --- | --- |');
     verdicts.forEach(function (v) {
+      // 「未知」必须带原因：一个查不到的包和「查得到但数据缺失」在表格里长得一样，
+      // 用户会以为它没问题。原因来自该 verdict 的 info finding（engine 在无法取数时写入
+      // 「未能获取数据：<error>」）。
+      var statusText = labelOf(v.status);
+      if (v.status === 'unknown') {
+        var why = (v.findings || []).filter(function (f) {
+          return f.level === 'info' && /未能获取数据/.test(f.text);
+        }).map(function (f) { return f.text.replace(/^未能获取数据：?/, ''); })[0];
+        if (why) statusText = labelOf(v.status) + '（' + String(why).slice(0, 60) + '）';
+      }
       lines.push('| ' + v.name + ' | `' + v.range + '` | ' + (v.data && v.data.latest ? v.data.latest : '—') +
-        ' | ' + (v.score === null ? '—' : v.score) + ' | ' + labelOf(v.status) + ' |');
+        ' | ' + (v.score === null ? '—' : v.score) + ' | ' + statusText + ' |');
     });
     lines.push('');
     lines.push('> 由 DepHealth 生成（浏览器本地计算，数据来自 npm registry / deps.dev / OSV.dev，未上传任何代码）');
