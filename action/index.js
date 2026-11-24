@@ -82,7 +82,40 @@ async function main() {
   }
 
   const truncated = maxDeps > 0 && deps.length > maxDeps;
-  if (truncated) deps = deps.slice(0, maxDeps);
+  if (truncated) {
+    // 截断必须按风险优先级，不能按 package.json 的书写顺序。
+    //
+    // 实测踩到的坑：26 个依赖、危险的那个写在最后，max-deps=25 直接把它丢掉，
+    // 报告显示「86/100、只分析了前 25 个」——用户会以为项目没事。
+    // 只加一句披露并不能解决「危险项永远轮不到」这个问题。
+    //
+    // 这里用 manifest 里就能拿到的信号做优先级（不需要额外网络请求）：
+    //   1. 非标准 registry 范围（workspace/file/git/link）排最后——分析不了，占名额没意义
+    //   2. 范围下限版本越低，越可能是老包 → 越危险
+    //   3. 同分时保持原顺序，保证结果稳定可复现
+    const rangeFloor = (range) => {
+      const m = String(range).match(/(\d+)\.(\d+)\.(\d+)/)
+      return m ? Number(m[1]) * 1e6 + Number(m[2]) * 1e3 + Number(m[3]) : Number.MAX_SAFE_INTEGER
+    }
+    const isLocal = (range) => /^(workspace:|file:|link:|git[+:]|https?:)/.test(String(range))
+    // 分成两段：registry 依赖（可分析）在前，本地依赖（分析不了）在后。
+    // 这样 slice(0, maxDeps) 会先整段排掉本地依赖——
+    // 若本地依赖只有 2 个而需要排除 3 个，它会先吃掉这 2 个，再去掉最弱的一个 registry 依赖，
+    // 而不是像"统一排序后取前 N"那样仍留下 1 个本地依赖、反而挤掉真实依赖。
+    const ranked = deps
+      .map((d, i) => ({ d, i, local: isLocal(d.range), floor: rangeFloor(d.range) }))
+      .sort((a, b) => {
+        if (a.local !== b.local) return a.local ? 1 : -1
+        if (a.local) return a.i - b.i // 本地依赖内部保持原序
+        if (a.floor !== b.floor) return a.floor - b.floor
+        return a.i - b.i
+      })
+      .slice(0, maxDeps)
+      // 分析顺序回到用户书写顺序，报告读起来才自然
+      .sort((a, b) => a.i - b.i)
+      .map((x) => x.d)
+    deps = ranked
+  }
 
   console.log(`分析 ${deps.length} 个依赖（${manifestPath}）…`);
   const rows = await Collect.pool(deps, CONCURRENCY, Collect.collectDep, (done, total, item) => {
@@ -134,7 +167,13 @@ async function main() {
   lines.push(Eng.toMarkdown(summary, verdicts, { project: parsed.name })
     .replace(/^## 依赖体检报告[^\n]*\n+/, ''));
   lines.push('');
-  if (truncated) lines.push(`> 依赖超过 ${maxDeps} 个，本次只分析了前 ${maxDeps} 个。`);
+  if (truncated) {
+    lines.push(
+      `> 依赖超过 ${maxDeps} 个（共 ${deps.length} 个），本次只分析了其中 ${maxDeps} 个。` +
+      `截断按风险优先级选取：非 registry 依赖（workspace/file/git）排在最后，其余按版本下限从低到高，` +
+      `高危项不会被书写顺序挤掉。调高 \`max-deps\` 可分析全部。`
+    );
+  }
   lines.push('> 由 [依赖体检 DepHealth](https://elsonshow.github.io/dep-health/) 生成 · 数据来自 npm registry / deps.dev / OSV.dev');
   appendSummary(lines.join('\n'));
 
