@@ -92,8 +92,17 @@ async function main() {
   const verdicts = rows.map((r) => Eng.assess(r, new Date()));
   const summary = Eng.summarize(verdicts);
 
+  // 门禁只依据「真实安全威胁」，不依据综合健康分。
+  //
+  // 之前这里看的是 findings 里有没有 critical 级条目，而「落后 3 个大版本」
+  // 这类维护性问题也会被标成 critical，于是 fail-on=critical 会误杀一个
+  // 只是版本落后的项目（实测：健康分 71/100 的项目被拦住）。
+  // 现在改用 engine 单独给出的 securityStatus：
+  //   critical    = 存在 CRITICAL/HIGH 级已知漏洞
+  //   deprecated  = 包已被官方标记弃用
+  // 两者都会阻断；版本落后只影响展示与排序，不阻断合并。
   const criticalVerdicts = verdicts.filter((v) =>
-    v.findings.some((f) => f.level === 'critical'));
+    v.securityStatus === 'critical' || v.securityStatus === 'deprecated');
   const hasCritical = criticalVerdicts.length > 0;
   const risky = summary.average !== null && summary.average < 65;
 
@@ -112,7 +121,11 @@ async function main() {
     lines.push('### 必须先处理');
     lines.push('');
     criticalVerdicts.slice(0, 5).forEach((v) => {
-      const worst = v.findings.find((f) => f.level === 'critical');
+      // 用安全等级找原因，而不是「随便一条 critical 文案」——
+      // 版本落后也会被标 critical，取错会把原因说成「落后 N 个版本」。
+      const worst =
+        v.findings.find((f) => f.level === 'critical' && /弃用|漏洞/.test(f.text)) ||
+        v.findings.find((f) => f.level === 'critical');
       lines.push(`- **${v.name}** \`${v.range}\` → ${worst ? worst.text : '高危'}`);
     });
     lines.push('');
