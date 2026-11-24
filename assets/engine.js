@@ -361,9 +361,20 @@
         return acc + (r >= 3 ? 12 : r === 2 ? 5 : 1);
       }, 0);
       score -= Math.min(penalty, 45);
+      // 审计对象是「范围下限」，不是「实际会装的版本」。
+      // 实测踩到的坑：axios ^1.7.9 的下限 1.7.9 有 33 个漏洞（13 个 HIGH），
+      // 但 ^1.7.9 实际会解析到 1.21.1，而 1.21.1 是 0 漏洞。
+      // 只说「当前版本存在 33 个漏洞」会被读成「我的项目有 33 个高危」——这是误报。
+      // 所以文案必须点明审计基准，并提示实际安装的版本可能已修好。
+      var atFloor = d.installed ? fmt(d.installed) : null;
+      var latestVer = d.latest || null;
+      var suffix = (atFloor && latestVer && atFloor !== latestVer)
+        ? '；实际安装的可能已是 ' + latestVer + '，请以 `npm ls` 为准'
+        : '';
       findings.push({
         level: worst >= 3 ? 'critical' : worst === 2 ? 'high' : 'low',
-        text: '当前版本存在 ' + vulns.length + ' 个已知漏洞（最高 ' + (vulns.map(function (v) { return v.severity; }).sort().slice(-1)[0] || 'LOW') + '）'
+        text: '范围下限 ' + (atFloor || '未知') + ' 有 ' + vulns.length + ' 个已知漏洞（最高 ' +
+          (vulns.map(function (v) { return v.severity; }).sort().slice(-1)[0] || 'LOW') + '）' + suffix
       });
     }
 
@@ -390,9 +401,30 @@
     // 以前只有 status，且它完全由分数决定，于是「落后 3 个大版本」这种维护性问题
     // 会把分数压到 40 以下、被判成 critical，进而让 fail-on=critical 的 CI 失败。
     // 那是误报：版本落后不该阻断合并。
-    var hasCriticalVuln = (d.vulns || []).some(function (v) {
+    // 漏洞是否应当阻断合并，要区分「范围下限」与「实际会装的版本」。
+    //
+    // 实测踩到的坑：`axios ^1.7.9` 的下限 1.7.9 有 33 个漏洞（13 个 HIGH），
+    // 但 `^1.7.9` 实际会解析到 1.21.1，而 1.21.1 是 0 漏洞。
+    // 只看下限会把一个依赖全是最新的正常项目判成不安全，`fail-on: critical` 直接失败。
+    //
+    // 区分规则：
+    //   A. 可升级范围（^ 或 ~ 开头，且最新版高于下限）→ 下限漏洞降级为 warning
+    //      因为 npm 实际会装范围内更新的版本，下限只是悲观边界
+    //   B. 精确锁定（1.7.9）或含上界（<= / <）→ 保持 critical
+    //      这类写法的下限就是实际会装的版本（或上界把它锁死）
+    //
+    // 保守性：降级只在「明确是可升级范围」时发生；报告文案始终写明审计基准与实际可能版本。
+    var hasHighVuln = (d.vulns || []).some(function (v) {
       return severityRank(v.severity) >= 3;
     });
+    var rangeStr = String(d.range || '').trim();
+    var isUpgradableRange = /^[\^~]/.test(rangeStr);
+    var canReachNewer =
+      isUpgradableRange &&
+      d.installed &&
+      d.latestParsed &&
+      cmp(d.installed, d.latestParsed) < 0;
+    var hasCriticalVuln = hasHighVuln && !canReachNewer;
     var isDeprecated = !!(d.deprecated && String(d.deprecated).trim());
     var securityCritical = hasCriticalVuln || isDeprecated;
 
