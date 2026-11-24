@@ -8,7 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const FILES = ['deprecated-warning.html', 'npm-deprecated-2026-11.html']
+const FILES = ['deprecated-warning.html', 'npm-deprecated-2026-11.html', 'upgrade-risk.html', 'no-lockfile-audit.html']
 
 let bad = 0
 const need = (ok, msg) => { if (ok) console.log('OK   ' + msg); else { bad++; console.log('FAIL ' + msg) } }
@@ -35,9 +35,12 @@ for (const f of FILES) {
   need(pcount >= 8, 'has substantial body paragraphs (' + pcount + ')')
   need(li >= 5, 'has list content (' + li + ')')
 
-  // 关键：不能把整篇 md 原文当纯文本
-  const looksLikeRawMd = /^#{1,6}\s+\S/m.test(h) || /\*\*[^*\n]+\*\*/.test(h)
-  need(!looksLikeRawMd, 'no unrendered markdown syntax left')
+  // 关键：不能把整篇 md 原文当纯文本。
+  // 但必须先把 <pre> 代码块剔除——代码块里的 "# 注释" 与 "**" 是合法内容，
+  // 不是未渲染的 markdown。上一版没剔除，把 bash 注释误判成残留。
+  const withoutPre = h.replace(/<pre>[\s\S]*?<\/pre>/g, '')
+  const looksLikeRawMd = /^#{1,6}\s+\S/m.test(withoutPre) || /\*\*[^*\n]+\*\*/.test(withoutPre)
+  need(!looksLikeRawMd, 'no unrendered markdown syntax left (excluding <pre> blocks)')
   need(!h.includes('\u0000'), 'no leftover placeholder tokens')
 
   // 必须是 HTML 内容而不是下载文件
