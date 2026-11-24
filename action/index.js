@@ -17,7 +17,12 @@ const path = require('path');
 const Eng = require('../assets/engine.js');
 const Collect = require('../assets/collect.js');
 
-const CONCURRENCY = 5;
+// 每个依赖要打 4 个公共端点（registry / deps.dev / 下载量 / OSV）。
+// 实测 91 个真实依赖：并发 5 = 29.5s，并发 12 = 14.1s，并发 20 = 8.4s，
+// 三者逐包结果完全一致（scored=91, unknown=0）。
+// 取 12 而不是 20：对公共 API 更友好，相对 5 已有 2.1x 提升；
+// 这几个端点都不是自家服务，压太狠容易被限流，反而让用户看到 unknown。
+const CONCURRENCY = 12;
 
 function input(name, fallback) {
   const v = process.env['INPUT_' + name.replace(/-/g, '_').toUpperCase()];
